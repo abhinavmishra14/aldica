@@ -89,8 +89,13 @@ All values were derived from the CSV output of the micro-benchmark, processed vi
 The aldica module currently adds the following, flexibly configurable serialisation options / optimisations with its Repository-tier Ignited-backed module:
 
 - `org.alfresco.repo.cache.TransactionalCache$CacheRegionKey`: structure flattening (eliminating reconstructible hash code) and raw serial form
+- `org.alfresco.repo.cache.TransactionalCache$ValueHolder`: structure flattening (substituting well known sentinel values; inlining simple numerical/textual values) and raw serial form
 - `org.alfresco.repo.cache.lookup.CacheRegionKey`: structure flattening (eliminating reconstructible hash code), well-known value substitution and raw serial form
 - `org.alfresco.repo.cache.lookup.CacheRegionValueKey`: structure flattening (eliminating reconstructible hash code), well-known value substitution and raw serial form
+- `org.alfresco.repo.domain.node.NodeVersionKey`: raw serial form
+- `org.alfresco.repo.domain.node.TransactionEntity`: raw serial form
+- `org.alfresco.repo.domain.node.StoreEntity`: raw serial form
+- `org.alfresco.repo.domain.contentdata.ContentUrlEntity`: structure flattening (inlining content URL key), dynamic value substitution (substituting `Mimetype`, `Encoding` and/or `Locale` instances with ID), value type substitution for `Locale` and raw serial form
 - `org.alfresco.service.cmr.repository.StoreRef`: well-known value substitution (on the `protocol` field) and raw serial form
 - `org.alfresco.service.cmr.repository.NodeRef`: structure flattening (inline `StoreRef` fields), well-known value substitution (full `StoreRef` or only `protocol` field of `StoreRef`) and raw serial form
 - `org.alfresco.service.namespace.QName`: structure flattening (eliminating reconstructible `hashCode` and optional `prefix`), well-known value substitution (namespace URIs) and raw serial form
@@ -99,6 +104,8 @@ The aldica module currently adds the following, flexibly configurable serialisat
 - `org.alfresco.repo.module.ModuleVersionNumber`: effectively no optimisation (even slightly less efficient), but custom serialiser provided to override `Externalizable` behaviour and support raw serial form
 - `org.aldica.repo.ignite.cache.NodeAspectsCacheSet`: dynamic value substitution (substituting `QName` instances with ID) and raw serial form
 - `org.aldica.repo.ignite.cache.NodePropertiesCacheMap`: dynamic value substitution (substituting `QName` and `ContentDataWithId` instances with ID) and raw serial form
+- `org.alfresco.repo.security.authentication.InMemoryTicketComponentImpl#Ticket`: structure flattening (inlining duration and expiry) and raw serial form
+- `org.alfresco.service.cmr.repository.datatype.Duration`: raw serial form
 
 The optimisations can be configured on a high-level via `alfresco-global.properties` and the following properties:
 
