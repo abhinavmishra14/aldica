@@ -58,8 +58,8 @@ public abstract class AbstractCustomBinarySerializer implements BinarySerializer
     private static final Pattern OPTIMISABLE_CONTENT_URL_PATH_PATTERN = Pattern.compile(
             "^(?:([^/]+)/)?([0-9]|[1-3][0-9]{1,3}|40[0-8][0-9]|409[0-5])/([1-9]|1[0-2])/([1-9]|[12][0-9]|3[01])/(1?[0-9]|2[0-3])/([1-5]?[0-9])(?:/([1-9]?[0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))?$");
 
-    // match a GUID-based file name which can be encoded in raw bytes rather than expensive characters
-    private static final Pattern OPTIMISABLE_CONTENT_URL_GUID_PATTERN = Pattern
+    // match a GUID-based value which can be encoded in raw bytes rather than expensive characters
+    protected static final Pattern OPTIMISABLE_GUID_PATTERN = Pattern
             .compile("^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$");
 
     private static final byte FLAG_CONTENT_URL_DEFAULT_PROTOCOL = (byte) 0x80;
@@ -162,7 +162,7 @@ public abstract class AbstractCustomBinarySerializer implements BinarySerializer
     protected final void writeDbId(@NotNull final Long id, @NotNull final BinaryRawWriter rawWriter)
     {
         ParameterCheck.mandatory("id", id);
-        this.write(id.longValue(), !this.handleNegativeIds, rawWriter);
+        this.write(id.longValue(), !handleNegativeIds, rawWriter);
     }
 
     /**
@@ -175,7 +175,7 @@ public abstract class AbstractCustomBinarySerializer implements BinarySerializer
      */
     protected final void writeDbId(final long id, @NotNull final BinaryRawWriter rawWriter)
     {
-        this.write(id, !this.handleNegativeIds, rawWriter);
+        this.write(id, !handleNegativeIds, rawWriter);
     }
 
     /**
@@ -187,7 +187,7 @@ public abstract class AbstractCustomBinarySerializer implements BinarySerializer
      */
     protected final long readDbId(@NotNull final BinaryRawReader rawReader)
     {
-        final long dbId = this.readLong(!this.handleNegativeIds, rawReader);
+        final long dbId = readLong(!handleNegativeIds, rawReader);
         return dbId;
     }
 
@@ -217,13 +217,13 @@ public abstract class AbstractCustomBinarySerializer implements BinarySerializer
     {
         ParameterCheck.mandatory("rawWriter", rawWriter);
 
-        if (this.handle4EiBFileSizes || !this.useVariableLengthIntegers)
+        if (handle4EiBFileSizes || !useVariableLengthIntegers)
         {
             rawWriter.writeLong(size);
         }
         else
         {
-            this.writeUnsignedLong(size, rawWriter);
+            writeUnsignedLong(size, rawWriter);
         }
     }
 
@@ -240,13 +240,13 @@ public abstract class AbstractCustomBinarySerializer implements BinarySerializer
         ParameterCheck.mandatory("rawReader", rawReader);
 
         long fileSize;
-        if (this.handle4EiBFileSizes || !this.useVariableLengthIntegers)
+        if (handle4EiBFileSizes || !useVariableLengthIntegers)
         {
             fileSize = rawReader.readLong();
         }
         else
         {
-            fileSize = this.readUnsignedLong(rawReader);
+            fileSize = readUnsignedLong(rawReader);
         }
         return fileSize;
     }
@@ -278,10 +278,10 @@ public abstract class AbstractCustomBinarySerializer implements BinarySerializer
             {
                 // at this point we can only be sure we have some kind of URL
                 if (!(trimmedContentURL.substring(0, protDelIdx).equals(FileContentStore.STORE_PROTOCOL)
-                        || trimmedContentURL.endsWith(CONTENT_URL_BIN_SUFFIX) || (lastSlashIdx > protDelIdx + 3
-                                && (OPTIMISABLE_CONTENT_URL_PATH_PATTERN
+                        || trimmedContentURL.endsWith(CONTENT_URL_BIN_SUFFIX)
+                        || (lastSlashIdx > protDelIdx + 3 && (OPTIMISABLE_CONTENT_URL_PATH_PATTERN
                                 .matcher(trimmedContentURL.substring(protDelIdx + 3, lastSlashIdx)).matches()))
-                        || (lastSlashIdx > protDelIdx + 3 && OPTIMISABLE_CONTENT_URL_GUID_PATTERN
+                        || (lastSlashIdx > protDelIdx + 3 && OPTIMISABLE_GUID_PATTERN
                                 .matcher(lastDotIdx > lastSlashIdx ? trimmedContentURL.substring(lastSlashIdx + 1, lastDotIdx)
                                         : trimmedContentURL.substring(lastSlashIdx + 1))
                                 .matches())))
@@ -309,7 +309,7 @@ public abstract class AbstractCustomBinarySerializer implements BinarySerializer
     {
         ParameterCheck.mandatory("contentUrl", contentURL);
 
-        if (!this.useOptimisedContentURL)
+        if (!useOptimisedContentURL)
         {
             this.write(contentURL, rawWriter);
         }
@@ -416,7 +416,7 @@ public abstract class AbstractCustomBinarySerializer implements BinarySerializer
 
                 name = lastDotIdx > lastSlashIdx ? trimmedContentURL.substring(lastSlashIdx + 1, lastDotIdx)
                         : trimmedContentURL.substring(lastSlashIdx + 1);
-                final Matcher guidMatcher = OPTIMISABLE_CONTENT_URL_GUID_PATTERN.matcher(name);
+                final Matcher guidMatcher = OPTIMISABLE_GUID_PATTERN.matcher(name);
                 if (guidMatcher.matches())
                 {
                     flags |= FLAG_CONTENT_URL_GUID_NAME;
@@ -491,16 +491,16 @@ public abstract class AbstractCustomBinarySerializer implements BinarySerializer
 
         String contentURL;
 
-        if (!this.useOptimisedContentURL)
+        if (!useOptimisedContentURL)
         {
-            contentURL = this.readString(rawReader);
+            contentURL = readString(rawReader);
         }
         else
         {
             final byte flags = rawReader.readByte();
             if ((flags & FLAG_CONTENT_URL_ANY_OPTIMISATION) == 0)
             {
-                contentURL = this.readString(rawReader);
+                contentURL = readString(rawReader);
             }
             else
             {
@@ -513,7 +513,7 @@ public abstract class AbstractCustomBinarySerializer implements BinarySerializer
                 }
                 else
                 {
-                    protocol = this.readString(rawReader);
+                    protocol = readString(rawReader);
                 }
                 contentURLBuilder.append(protocol).append(ContentStore.PROTOCOL_DELIMITER);
 
@@ -521,7 +521,7 @@ public abstract class AbstractCustomBinarySerializer implements BinarySerializer
                 {
                     if ((flags & FLAG_CONTENT_URL_PATH_WITH_VOLUMES) != 0)
                     {
-                        final String volume = this.readString(rawReader);
+                        final String volume = readString(rawReader);
                         contentURLBuilder.append(volume).append('/');
                     }
 
@@ -555,7 +555,7 @@ public abstract class AbstractCustomBinarySerializer implements BinarySerializer
                 }
                 else if ((flags & FLAG_CONTENT_URL_NO_PATH) == 0)
                 {
-                    final String path = this.readString(rawReader);
+                    final String path = readString(rawReader);
                     contentURLBuilder.append(path);
                 }
 
@@ -572,7 +572,7 @@ public abstract class AbstractCustomBinarySerializer implements BinarySerializer
                 }
                 else
                 {
-                    final String name = this.readString(rawReader);
+                    final String name = readString(rawReader);
                     contentURLBuilder.append(name);
                 }
 
@@ -582,7 +582,7 @@ public abstract class AbstractCustomBinarySerializer implements BinarySerializer
                 }
                 else if ((flags & FLAG_CONTENT_URL_NO_SUFFIX) == 0)
                 {
-                    final String suffix = this.readString(rawReader);
+                    final String suffix = readString(rawReader);
                     contentURLBuilder.append('.').append(suffix);
                 }
 
@@ -629,7 +629,7 @@ public abstract class AbstractCustomBinarySerializer implements BinarySerializer
     {
         ParameterCheck.mandatory("rawReader", rawReader);
 
-        final int size = this.readInt(true, rawReader);
+        final int size = readInt(true, rawReader);
         final byte[] bytes = new byte[size];
         for (int idx = 0; idx < size; idx++)
         {
@@ -664,7 +664,7 @@ public abstract class AbstractCustomBinarySerializer implements BinarySerializer
     @NotNull
     protected final Locale readLocale(@NotNull final BinaryRawReader rawReader)
     {
-        final String valueStr = this.readString(rawReader);
+        final String valueStr = readString(rawReader);
         // we know there is at least a default converter for Locale, maybe even an optimised (caching) one
         final Locale value = DefaultTypeConverter.INSTANCE.convert(Locale.class, valueStr);
         return value;
@@ -705,13 +705,12 @@ public abstract class AbstractCustomBinarySerializer implements BinarySerializer
      *             if the long value cannot be written, e.g. if {@link #setUseVariableLengthIntegers(boolean) variable length integers}
      *             are enabled and the value exceeds the supported (reduced) value space for long values
      */
-    protected final void write(final long value, final boolean nonNegativeOnly,
-            @NotNull final BinaryRawWriter rawWriter)
+    protected final void write(final long value, final boolean nonNegativeOnly, @NotNull final BinaryRawWriter rawWriter)
             throws BinaryObjectException
     {
         ParameterCheck.mandatory("rawWriter", rawWriter);
 
-        if (!this.useVariableLengthIntegers)
+        if (!useVariableLengthIntegers)
         {
             rawWriter.writeLong(value);
         }
@@ -719,11 +718,11 @@ public abstract class AbstractCustomBinarySerializer implements BinarySerializer
         {
             if (nonNegativeOnly)
             {
-                this.writeUnsignedLong(value, rawWriter);
+                writeUnsignedLong(value, rawWriter);
             }
             else
             {
-                this.writeSignedLong(value, rawWriter);
+                writeSignedLong(value, rawWriter);
             }
         }
     }
@@ -744,7 +743,7 @@ public abstract class AbstractCustomBinarySerializer implements BinarySerializer
         ParameterCheck.mandatory("rawReader", rawReader);
 
         long value;
-        if (!this.useVariableLengthIntegers)
+        if (!useVariableLengthIntegers)
         {
             value = rawReader.readLong();
         }
@@ -752,11 +751,11 @@ public abstract class AbstractCustomBinarySerializer implements BinarySerializer
         {
             if (nonNegativeOnly)
             {
-                value = this.readUnsignedLong(rawReader);
+                value = readUnsignedLong(rawReader);
             }
             else
             {
-                value = this.readSignedLong(rawReader);
+                value = readSignedLong(rawReader);
             }
         }
 
@@ -798,13 +797,12 @@ public abstract class AbstractCustomBinarySerializer implements BinarySerializer
      *             if the integer value cannot be written, e.g. if {@link #setUseVariableLengthIntegers(boolean) variable length integers}
      *             are enabled and the value exceeds the supported (reduced) value space for long values
      */
-    protected final void write(final int value, final boolean nonNegativeOnly,
-            @NotNull final BinaryRawWriter rawWriter)
+    protected final void write(final int value, final boolean nonNegativeOnly, @NotNull final BinaryRawWriter rawWriter)
             throws BinaryObjectException
     {
         ParameterCheck.mandatory("rawWriter", rawWriter);
 
-        if (!this.useVariableLengthIntegers)
+        if (!useVariableLengthIntegers)
         {
             rawWriter.writeInt(value);
         }
@@ -812,11 +810,11 @@ public abstract class AbstractCustomBinarySerializer implements BinarySerializer
         {
             if (nonNegativeOnly)
             {
-                this.writeUnsignedInteger(value, rawWriter);
+                writeUnsignedInteger(value, rawWriter);
             }
             else
             {
-                this.writeSignedInteger(value, rawWriter);
+                writeSignedInteger(value, rawWriter);
             }
         }
     }
@@ -837,7 +835,7 @@ public abstract class AbstractCustomBinarySerializer implements BinarySerializer
         ParameterCheck.mandatory("rawReader", rawReader);
 
         int value;
-        if (!this.useVariableLengthIntegers)
+        if (!useVariableLengthIntegers)
         {
             value = rawReader.readInt();
         }
@@ -845,11 +843,11 @@ public abstract class AbstractCustomBinarySerializer implements BinarySerializer
         {
             if (nonNegativeOnly)
             {
-                value = this.readUnsignedInteger(rawReader);
+                value = readUnsignedInteger(rawReader);
             }
             else
             {
-                value = this.readSignedInteger(rawReader);
+                value = readSignedInteger(rawReader);
             }
         }
 

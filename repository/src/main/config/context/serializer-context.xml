@@ -68,6 +68,22 @@
         <property name="handleNegativeIds" value="\${${moduleId}.core.binary.optimisation.storeEntity.handleNegativeIds}" />
     </bean>
 
+    <bean id="Configuration.${moduleId}.core.binary.serializer.alfresco.optimisedNodeEntity" abstract="true"
+        class="${project.basePackage}.binary.entity.NodeEntityBinarySerializer">
+        <property name="useRawSerialForm" value="\${${moduleId}.core.binary.optimisation.nodeEntity.useRawSerial}" />
+        <property name="useVariableLengthIntegers"
+            value="\${${moduleId}.core.binary.optimisation.nodeEntity.useVariableLengthIntegers}" />
+        <property name="handleNegativeIds" value="\${${moduleId}.core.binary.optimisation.nodeEntity.handleNegativeIds}" />
+    </bean>
+
+    <bean id="Configuration.${moduleId}.core.binary.serializer.alfresco.optimisedAclEntity" abstract="true"
+        class="${project.basePackage}.binary.entity.AclEntityBinarySerializer">
+        <property name="useRawSerialForm" value="\${${moduleId}.core.binary.optimisation.aclEntity.useRawSerial}" />
+        <property name="useVariableLengthIntegers"
+            value="\${${moduleId}.core.binary.optimisation.aclEntity.useVariableLengthIntegers}" />
+        <property name="handleNegativeIds" value="\${${moduleId}.core.binary.optimisation.aclEntity.handleNegativeIds}" />
+    </bean>
+
     <bean id="Configuration.${moduleId}.core.binary.serializer.alfresco.optimisedContentUrlEntity" abstract="true"
         class="${project.basePackage}.binary.entity.ContentUrlEntityBinarySerializer">
         <property name="useRawSerialForm" value="\${${moduleId}.core.binary.optimisation.contentUrlEntity.useRawSerial}" />

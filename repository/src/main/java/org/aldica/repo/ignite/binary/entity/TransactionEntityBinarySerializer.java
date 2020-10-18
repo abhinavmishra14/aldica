@@ -19,6 +19,8 @@ import org.apache.ignite.binary.BinaryWriter;
 public class TransactionEntityBinarySerializer extends AbstractCustomBinarySerializer
 {
 
+    private static final String FLAGS = "flags";
+
     private static final String ID = "id";
 
     private static final String VERSION = "version";
@@ -26,6 +28,12 @@ public class TransactionEntityBinarySerializer extends AbstractCustomBinarySeria
     private static final String CHANGE_TXN_ID = "changeTxnId";
 
     private static final String COMMIT_TIME_MS = "commitTimeMs";
+
+    // in some use cases (e.g. as constituent value of NodeEntity), version and commit time ms are not loaded
+    // that is more by negligence (missing mapping in result template) than reasonable functional decision
+    private static final byte FLAG_NO_VERSION = 1;
+
+    private static final byte FLAG_NO_COMMIT_TIME_MS = 2;
 
     /**
      *
@@ -42,24 +50,51 @@ public class TransactionEntityBinarySerializer extends AbstractCustomBinarySeria
 
         final TransactionEntity transaction = (TransactionEntity) obj;
 
+        final Long version = transaction.getVersion();
+        final Long commitTimeMs = transaction.getCommitTimeMs();
+
+        byte flags = 0;
+        if (version == null)
+        {
+            flags |= FLAG_NO_VERSION;
+        }
+        if (commitTimeMs == null)
+        {
+            flags |= FLAG_NO_COMMIT_TIME_MS;
+        }
+
         if (this.useRawSerialForm)
         {
             final BinaryRawWriter rawWriter = writer.rawWriter();
 
-            // version for optimistic locking is effectively a DB ID as well
+            rawWriter.writeByte(flags);
             this.writeDbId(transaction.getId(), rawWriter);
-            this.writeDbId(transaction.getVersion(), rawWriter);
+            if (version != null)
+            {
+                // version for optimistic locking is effectively a DB ID as well
+                this.writeDbId(version, rawWriter);
+            }
             this.write(transaction.getChangeTxnId(), rawWriter);
-            // highly unlikely (impossible without DB manipulation) to have a commit time ms before 1970
-            // 64 bit timestamp can also live with some bits knocked off for potential serial optimisation if enabled
-            this.write(transaction.getCommitTimeMs(), true, rawWriter);
+            if (commitTimeMs != null)
+            {
+                // highly unlikely (impossible without DB manipulation) to have a commit time ms before 1970
+                // 64 bit timestamp can also live with some bits knocked off for potential serial optimisation if enabled
+                this.write(commitTimeMs, true, rawWriter);
+            }
         }
         else
         {
+            writer.writeByte(FLAGS, flags);
             writer.writeLong(ID, transaction.getId());
-            writer.writeLong(VERSION, transaction.getVersion());
+            if (version != null)
+            {
+                writer.writeLong(VERSION, version);
+            }
             writer.writeString(CHANGE_TXN_ID, transaction.getChangeTxnId());
-            writer.writeLong(COMMIT_TIME_MS, transaction.getCommitTimeMs());
+            if (commitTimeMs != null)
+            {
+                writer.writeLong(COMMIT_TIME_MS, commitTimeMs);
+            }
         }
     }
 
@@ -78,26 +113,41 @@ public class TransactionEntityBinarySerializer extends AbstractCustomBinarySeria
 
         final TransactionEntity transaction = (TransactionEntity) obj;
 
+        byte flags;
         Long id;
-        Long version;
+        Long version = null;
         String changeTxnId;
-        Long commitTimeMs;
+        Long commitTimeMs = null;
 
         if (this.useRawSerialForm)
         {
             final BinaryRawReader rawReader = reader.rawReader();
 
+            flags = rawReader.readByte();
             id = this.readDbId(rawReader);
-            version = this.readDbId(rawReader);
+            if ((flags & FLAG_NO_VERSION) == 0)
+            {
+                version = this.readDbId(rawReader);
+            }
             changeTxnId = this.readString(rawReader);
-            commitTimeMs = this.readLong(true, rawReader);
+            if ((flags & FLAG_NO_COMMIT_TIME_MS) == 0)
+            {
+                commitTimeMs = this.readLong(true, rawReader);
+            }
         }
         else
         {
+            flags = reader.readByte(FLAGS);
             id = reader.readLong(ID);
-            version = reader.readLong(VERSION);
+            if ((flags & FLAG_NO_VERSION) == 0)
+            {
+                version = reader.readLong(VERSION);
+            }
             changeTxnId = reader.readString(CHANGE_TXN_ID);
-            commitTimeMs = reader.readLong(COMMIT_TIME_MS);
+            if ((flags & FLAG_NO_COMMIT_TIME_MS) == 0)
+            {
+                commitTimeMs = reader.readLong(COMMIT_TIME_MS);
+            }
         }
 
         transaction.setId(id);

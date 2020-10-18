@@ -199,7 +199,7 @@ public class StoreRefBinarySerializerTests extends GridTestsBase
 
             Assert.assertEquals(controlValue, cacheValue);
             // check deep serialisation was actually involved
-            Assert.assertFalse(controlValue == cacheValue);
+            Assert.assertNotSame(controlValue, cacheValue);
             Assert.assertFalse(controlValue.getIdentifier() == cacheValue.getIdentifier());
             // well-known protocol should use same value
             Assert.assertTrue(controlValue.getProtocol() == cacheValue.getProtocol());
@@ -211,7 +211,7 @@ public class StoreRefBinarySerializerTests extends GridTestsBase
 
             Assert.assertEquals(controlValue, cacheValue);
             // check deep serialisation was actually involved
-            Assert.assertFalse(controlValue == cacheValue);
+            Assert.assertNotSame(controlValue, cacheValue);
             Assert.assertFalse(controlValue.getIdentifier() == cacheValue.getIdentifier());
             Assert.assertFalse(controlValue.getProtocol() == cacheValue.getProtocol());
         }

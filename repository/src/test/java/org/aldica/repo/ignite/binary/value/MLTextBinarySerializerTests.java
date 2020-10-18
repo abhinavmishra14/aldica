@@ -280,7 +280,7 @@ public class MLTextBinarySerializerTests extends GridTestsBase
 
             Assert.assertEquals(controlValue, cacheValue);
             // check deep serialisation was actually involved (different value instances)
-            Assert.assertFalse(controlValue == cacheValue);
+            Assert.assertNotSame(controlValue, cacheValue);
 
             // test unsupported locale
             controlValue = new MLText(Locale.UK, "English text");
@@ -292,7 +292,7 @@ public class MLTextBinarySerializerTests extends GridTestsBase
 
             Assert.assertEquals(controlValue, cacheValue);
             // check deep serialisation was actually involved (different value instances)
-            Assert.assertFalse(controlValue == cacheValue);
+            Assert.assertNotSame(controlValue, cacheValue);
         }
     }
 

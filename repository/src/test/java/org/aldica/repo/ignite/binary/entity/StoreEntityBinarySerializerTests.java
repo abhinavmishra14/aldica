@@ -67,14 +67,14 @@ public class StoreEntityBinarySerializerTests extends GridTestsBase
 
         final BinaryConfiguration binaryConfiguration = new BinaryConfiguration();
 
-        final BinaryTypeConfiguration binaryTypeConfigurationForStoreRef = new BinaryTypeConfiguration();
-        binaryTypeConfigurationForStoreRef.setTypeName(StoreEntity.class.getName());
+        final BinaryTypeConfiguration binaryTypeConfigurationForStoreEntity = new BinaryTypeConfiguration();
+        binaryTypeConfigurationForStoreEntity.setTypeName(StoreEntity.class.getName());
         final StoreEntityBinarySerializer serializer = new StoreEntityBinarySerializer();
         serializer.setUseRawSerialForm(serialForm);
         serializer.setUseVariableLengthIntegers(serialForm);
-        binaryTypeConfigurationForStoreRef.setSerializer(serializer);
+        binaryTypeConfigurationForStoreEntity.setSerializer(serializer);
 
-        binaryConfiguration.setTypeConfigurations(Arrays.asList(binaryTypeConfigurationForStoreRef));
+        binaryConfiguration.setTypeConfigurations(Arrays.asList(binaryTypeConfigurationForStoreEntity));
         conf.setBinaryConfiguration(binaryConfiguration);
 
         final DataStorageConfiguration dataConf = new DataStorageConfiguration();
@@ -128,7 +128,7 @@ public class StoreEntityBinarySerializerTests extends GridTestsBase
             final IgniteCache<Long, StoreEntity> referenceCache = referenceGrid.getOrCreateCache(cacheConfig);
             final IgniteCache<Long, StoreEntity> cache = grid.getOrCreateCache(cacheConfig);
 
-            this.efficiencyImpl(referenceGrid, grid, referenceCache, cache, "aldica optimised", "Ignite default", 0.13);
+            this.efficiencyImpl(referenceGrid, grid, referenceCache, cache, "aldica optimised", "Ignite default", 0.12);
         }
         finally
         {
@@ -185,6 +185,7 @@ public class StoreEntityBinarySerializerTests extends GridTestsBase
             StoreEntity controlValue;
             StoreEntity cacheValue;
 
+            // normal case
             controlValue = new StoreEntity();
             controlValue.setId(1l);
             controlValue.setVersion(1l);
@@ -204,6 +205,7 @@ public class StoreEntityBinarySerializerTests extends GridTestsBase
             Assert.assertEquals(controlValue.getIdentifier(), cacheValue.getIdentifier());
             Assert.assertNotNull(cacheValue.getRootNode());
 
+            // custom store identifier
             controlValue = new StoreEntity();
             controlValue.setId(2l);
             controlValue.setVersion(1l);
@@ -222,6 +224,7 @@ public class StoreEntityBinarySerializerTests extends GridTestsBase
             Assert.assertEquals(controlValue.getIdentifier(), cacheValue.getIdentifier());
             Assert.assertSame(controlValue.getRootNode(), cacheValue.getRootNode());
 
+            // custom store protocol
             controlValue = new StoreEntity();
             controlValue.setId(3l);
             controlValue.setVersion(1l);
@@ -240,6 +243,7 @@ public class StoreEntityBinarySerializerTests extends GridTestsBase
             Assert.assertEquals(controlValue.getIdentifier(), cacheValue.getIdentifier());
             Assert.assertSame(controlValue.getRootNode(), cacheValue.getRootNode());
 
+            // entirely custom store
             controlValue = new StoreEntity();
             controlValue.setId(4l);
             controlValue.setVersion(1l);
@@ -257,6 +261,24 @@ public class StoreEntityBinarySerializerTests extends GridTestsBase
             Assert.assertEquals(controlValue.getProtocol(), cacheValue.getProtocol());
             Assert.assertEquals(controlValue.getIdentifier(), cacheValue.getIdentifier());
             Assert.assertSame(controlValue.getRootNode(), cacheValue.getRootNode());
+
+            // incomplete case (e.g. as constituent of NodeEntity)
+            controlValue = new StoreEntity();
+            controlValue.setId(5l);
+            controlValue.setProtocol(StoreRef.PROTOCOL_WORKSPACE);
+            controlValue.setIdentifier("SpacesStore");
+
+            cache.put(5l, controlValue);
+            cacheValue = cache.get(5l);
+
+            // can't check for equals - value class does not support it
+            // check deep serialisation was actually involved (different value instances)
+            Assert.assertNotSame(controlValue, cacheValue);
+            Assert.assertEquals(controlValue.getId(), cacheValue.getId());
+            Assert.assertEquals(controlValue.getVersion(), cacheValue.getVersion());
+            Assert.assertEquals(controlValue.getProtocol(), cacheValue.getProtocol());
+            Assert.assertEquals(controlValue.getIdentifier(), cacheValue.getIdentifier());
+            Assert.assertNull(cacheValue.getRootNode());
         }
     }
 

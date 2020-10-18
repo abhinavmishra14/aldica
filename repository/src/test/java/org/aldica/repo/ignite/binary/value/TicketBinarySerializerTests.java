@@ -49,14 +49,14 @@ public class TicketBinarySerializerTests extends GridTestsBase
 
         final BinaryConfiguration binaryConfiguration = new BinaryConfiguration();
 
-        final BinaryTypeConfiguration binaryTypeConfigurationForStoreRef = new BinaryTypeConfiguration();
-        binaryTypeConfigurationForStoreRef.setTypeName(Ticket.class.getName());
+        final BinaryTypeConfiguration binaryTypeConfigurationForTicket = new BinaryTypeConfiguration();
+        binaryTypeConfigurationForTicket.setTypeName(Ticket.class.getName());
         final TicketBinarySerializer serializer = new TicketBinarySerializer();
         serializer.setUseRawSerialForm(serialForm);
         serializer.setUseVariableLengthIntegers(serialForm);
-        binaryTypeConfigurationForStoreRef.setSerializer(serializer);
+        binaryTypeConfigurationForTicket.setSerializer(serializer);
 
-        binaryConfiguration.setTypeConfigurations(Arrays.asList(binaryTypeConfigurationForStoreRef));
+        binaryConfiguration.setTypeConfigurations(Arrays.asList(binaryTypeConfigurationForTicket));
         conf.setBinaryConfiguration(binaryConfiguration);
 
         final DataStorageConfiguration dataConf = new DataStorageConfiguration();
@@ -183,7 +183,7 @@ public class TicketBinarySerializerTests extends GridTestsBase
             cacheValue = cacheFacade.getLastValue();
 
             Assert.assertEquals(controlValue, cacheValue);
-            Assert.assertFalse(controlValue == cacheValue);
+            Assert.assertNotSame(controlValue, cacheValue);
 
             ticketComponent.setExpiryMode(ExpiryMode.AFTER_FIXED_TIME.name());
             ticketComponent.setValidDuration("P10H");
@@ -195,7 +195,7 @@ public class TicketBinarySerializerTests extends GridTestsBase
             cacheValue = cacheFacade.getLastValue();
 
             Assert.assertEquals(controlValue, cacheValue);
-            Assert.assertFalse(controlValue == cacheValue);
+            Assert.assertNotSame(controlValue, cacheValue);
 
             // ExpiryMode.DO_NOT_EXPIRE is bugged in Alfresco => NPE in Ticket.equals
         }

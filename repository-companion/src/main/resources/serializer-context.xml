@@ -38,6 +38,12 @@
     <bean id="Configuration.${moduleId}.core.binary.serializer.alfresco.optimisedStoreEntity"
         class="org.aldica.repo.ignite.binary.entity.StoreEntityBinarySerializer" />
 
+    <bean id="Configuration.${moduleId}.core.binary.serializer.alfresco.optimisedNodeEntity"
+        class="org.aldica.repo.ignite.binary.entity.NodeEntityBinarySerializer" />
+
+    <bean id="Configuration.${moduleId}.core.binary.serializer.alfresco.optimisedAclEntity"
+        class="org.aldica.repo.ignite.binary.entity.AclEntityBinarySerializer" />
+
     <bean id="Configuration.${moduleId}.core.binary.serializer.alfresco.optimisedContentUrlEntity"
         class="org.aldica.repo.ignite.binary.entity.ContentUrlEntityBinarySerializer" />
 

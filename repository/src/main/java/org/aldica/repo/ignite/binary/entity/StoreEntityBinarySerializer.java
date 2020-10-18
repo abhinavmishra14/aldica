@@ -23,11 +23,19 @@ import org.apache.ignite.binary.BinaryWriter;
 public class StoreEntityBinarySerializer extends AbstractStoreCustomBinarySerializer
 {
 
+    private static final String FLAGS = "flags";
+
     private static final String ID = "id";
 
     private static final String VERSION = "version";
 
     private static final String ROOT_NODE = "rootNode";
+
+    // in some use cases (e.g. as constituent value of NodeEntity), version and commit time ms are not loaded
+    // that is more by negligence (missing mapping in result template) than reasonable functional decision
+    private static final byte FLAG_NO_VERSION = 1;
+
+    private static final byte FLAG_NO_ROOT_NODE = 2;
 
     /**
      *
@@ -44,22 +52,49 @@ public class StoreEntityBinarySerializer extends AbstractStoreCustomBinarySerial
 
         final StoreEntity store = (StoreEntity) obj;
 
+        final Long version = store.getVersion();
+        final NodeEntity rootNode = store.getRootNode();
+
+        byte flags = 0;
+        if (version == null)
+        {
+            flags |= FLAG_NO_VERSION;
+        }
+        if (rootNode == null)
+        {
+            flags |= FLAG_NO_ROOT_NODE;
+        }
+
         if (this.useRawSerialForm)
         {
             final BinaryRawWriter rawWriter = writer.rawWriter();
 
-            // version for optimistic locking is effectively a DB ID as well
+            rawWriter.writeByte(flags);
             this.writeDbId(store.getId(), rawWriter);
-            this.writeDbId(store.getVersion(), rawWriter);
+            if (version != null)
+            {
+                // version for optimistic locking is effectively a DB ID as well
+                this.writeDbId(version, rawWriter);
+            }
             this.writeStore(store.getProtocol(), store.getIdentifier(), rawWriter);
-            rawWriter.writeObject(store.getRootNode());
+            if (rootNode != null)
+            {
+                rawWriter.writeObject(rootNode);
+            }
         }
         else
         {
+            writer.writeByte(FLAGS, flags);
             writer.writeLong(ID, store.getId());
-            writer.writeLong(VERSION, store.getVersion());
+            if (version != null)
+            {
+                writer.writeLong(VERSION, version);
+            }
             this.writeStore(store.getProtocol(), store.getIdentifier(), writer);
-            writer.writeObject(ROOT_NODE, store.getRootNode());
+            if (rootNode != null)
+            {
+                writer.writeObject(ROOT_NODE, rootNode);
+            }
         }
     }
 
@@ -78,26 +113,41 @@ public class StoreEntityBinarySerializer extends AbstractStoreCustomBinarySerial
 
         final StoreEntity store = (StoreEntity) obj;
 
+        byte flags;
         Long id;
-        Long version;
+        Long version = null;
         Pair<String, String> protocolAndIdentifier;
-        NodeEntity rootNode;
+        NodeEntity rootNode = null;
 
         if (this.useRawSerialForm)
         {
             final BinaryRawReader rawReader = reader.rawReader();
 
+            flags = rawReader.readByte();
             id = this.readDbId(rawReader);
-            version = this.readDbId(rawReader);
+            if ((flags & FLAG_NO_VERSION) == 0)
+            {
+                version = this.readDbId(rawReader);
+            }
             protocolAndIdentifier = this.readStore(rawReader);
-            rootNode = rawReader.readObject();
+            if ((flags & FLAG_NO_ROOT_NODE) == 0)
+            {
+                rootNode = rawReader.readObject();
+            }
         }
         else
         {
+            flags = reader.readByte(FLAGS);
             id = reader.readLong(ID);
-            version = reader.readLong(VERSION);
+            if ((flags & FLAG_NO_VERSION) == 0)
+            {
+                version = reader.readLong(VERSION);
+            }
             protocolAndIdentifier = this.readStore(reader);
-            rootNode = reader.readObject(ROOT_NODE);
+            if ((flags & FLAG_NO_ROOT_NODE) == 0)
+            {
+                rootNode = reader.readObject(ROOT_NODE);
+            }
         }
 
         store.setId(id);

@@ -325,7 +325,7 @@ public class ContentDataBinarySerializerTests extends GridTestsBase
 
             Assert.assertEquals(controlValue, cacheValue);
             // check deep serialisation was actually involved (different value instances)
-            Assert.assertFalse(controlValue == cacheValue);
+            Assert.assertNotSame(controlValue, cacheValue);
 
             // test values not in any mocked DAOs
             controlValue = new ContentData(urlProvider.createNewFileStoreUrl(), MimetypeMap.MIMETYPE_EXCEL, 123l,
@@ -337,7 +337,7 @@ public class ContentDataBinarySerializerTests extends GridTestsBase
 
             Assert.assertEquals(controlValue, cacheValue);
             // check deep serialisation was actually involved (different value instances)
-            Assert.assertFalse(controlValue == cacheValue);
+            Assert.assertNotSame(controlValue, cacheValue);
 
             // test null values for reference elements
             controlValue = new ContentData(urlProvider.createNewFileStoreUrl(), null, 123l, null, null);
@@ -348,7 +348,7 @@ public class ContentDataBinarySerializerTests extends GridTestsBase
 
             Assert.assertEquals(controlValue, cacheValue);
             // check deep serialisation was actually involved (different value instances)
-            Assert.assertFalse(controlValue == cacheValue);
+            Assert.assertNotSame(controlValue, cacheValue);
 
             // test content data with ID extension
             controlValue = new ContentData(urlProvider.createNewFileStoreUrl(), MimetypeMap.MIMETYPE_PDF, 123l,
@@ -361,7 +361,7 @@ public class ContentDataBinarySerializerTests extends GridTestsBase
 
             Assert.assertEquals(controlValue, cacheValue);
             // check deep serialisation was actually involved (different value instances)
-            Assert.assertFalse(controlValue == cacheValue);
+            Assert.assertNotSame(controlValue, cacheValue);
         }
     }
 

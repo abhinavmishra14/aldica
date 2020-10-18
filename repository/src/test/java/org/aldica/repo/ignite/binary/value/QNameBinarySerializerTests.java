@@ -197,7 +197,7 @@ public class QNameBinarySerializerTests extends GridTestsBase
 
             Assert.assertEquals(controlValue, cacheValue);
             // check deep serialisation was actually involved
-            Assert.assertFalse(controlValue == cacheValue);
+            Assert.assertNotSame(controlValue, cacheValue);
             Assert.assertFalse(controlValue.getLocalName() == cacheValue.getLocalName());
             // namespace should be reused for well-known ones
             Assert.assertTrue(controlValue.getNamespaceURI() == cacheValue.getNamespaceURI());
@@ -210,7 +210,7 @@ public class QNameBinarySerializerTests extends GridTestsBase
 
             Assert.assertEquals(controlValue, cacheValue);
             // check deep serialisation was actually involved
-            Assert.assertFalse(controlValue == cacheValue);
+            Assert.assertNotSame(controlValue, cacheValue);
             Assert.assertFalse(controlValue.getLocalName() == cacheValue.getLocalName());
             Assert.assertFalse(controlValue.getNamespaceURI() == cacheValue.getNamespaceURI());
         }

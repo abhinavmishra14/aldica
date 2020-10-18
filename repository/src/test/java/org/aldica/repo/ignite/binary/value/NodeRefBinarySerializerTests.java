@@ -227,7 +227,7 @@ public class NodeRefBinarySerializerTests extends GridTestsBase
 
             Assert.assertEquals(controlValue, cacheValue);
             // check deep serialisation was actually involved
-            Assert.assertFalse(controlValue == cacheValue);
+            Assert.assertNotSame(controlValue, cacheValue);
             Assert.assertFalse(controlValue.getId() == cacheValue.getId());
             // well-known store should use same value
             Assert.assertTrue(controlValue.getStoreRef() == cacheValue.getStoreRef());
@@ -239,7 +239,7 @@ public class NodeRefBinarySerializerTests extends GridTestsBase
 
             Assert.assertEquals(controlValue, cacheValue);
             // check deep serialisation was actually involved
-            Assert.assertFalse(controlValue == cacheValue);
+            Assert.assertNotSame(controlValue, cacheValue);
             Assert.assertFalse(controlValue.getStoreRef() == cacheValue.getStoreRef());
             Assert.assertFalse(controlValue.getId() == cacheValue.getId());
 
@@ -250,7 +250,7 @@ public class NodeRefBinarySerializerTests extends GridTestsBase
 
             Assert.assertEquals(controlValue, cacheValue);
             // check deep serialisation was actually involved
-            Assert.assertFalse(controlValue == cacheValue);
+            Assert.assertNotSame(controlValue, cacheValue);
             Assert.assertFalse(controlValue.getStoreRef() == cacheValue.getStoreRef());
             Assert.assertFalse(controlValue.getId() == cacheValue.getId());
             Assert.assertFalse(controlValue.getStoreRef().getIdentifier() == cacheValue.getStoreRef().getIdentifier());

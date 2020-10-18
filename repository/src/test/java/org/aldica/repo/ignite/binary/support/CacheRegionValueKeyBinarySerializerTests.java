@@ -173,7 +173,7 @@ public class CacheRegionValueKeyBinarySerializerTests extends GridTestsBase
 
             Assert.assertEquals(controlValue, cacheValue);
             // check deep serialisation was actually involved
-            Assert.assertFalse(controlValue == cacheValue);
+            Assert.assertNotSame(controlValue, cacheValue);
 
             // default region + arbitrary key
             controlValue = new CacheRegionValueKey(CacheRegion.DEFAULT.getCacheRegionName(), Instant.now());
@@ -183,7 +183,7 @@ public class CacheRegionValueKeyBinarySerializerTests extends GridTestsBase
 
             Assert.assertEquals(controlValue, cacheValue);
             // check deep serialisation was actually involved
-            Assert.assertFalse(controlValue == cacheValue);
+            Assert.assertNotSame(controlValue, cacheValue);
 
             // random region + String key
             controlValue = new CacheRegionValueKey(UUID.randomUUID().toString(), "value2");
@@ -193,7 +193,7 @@ public class CacheRegionValueKeyBinarySerializerTests extends GridTestsBase
 
             Assert.assertEquals(controlValue, cacheValue);
             // check deep serialisation was actually involved
-            Assert.assertFalse(controlValue == cacheValue);
+            Assert.assertNotSame(controlValue, cacheValue);
 
             // random region + arbitrary key
             controlValue = new CacheRegionValueKey(UUID.randomUUID().toString(), Instant.now());
@@ -203,7 +203,7 @@ public class CacheRegionValueKeyBinarySerializerTests extends GridTestsBase
 
             Assert.assertEquals(controlValue, cacheValue);
             // check deep serialisation was actually involved
-            Assert.assertFalse(controlValue == cacheValue);
+            Assert.assertNotSame(controlValue, cacheValue);
         }
     }
 

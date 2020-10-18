@@ -44,14 +44,14 @@ public class TransactionEntityBinarySerializerTests extends GridTestsBase
 
         final BinaryConfiguration binaryConfiguration = new BinaryConfiguration();
 
-        final BinaryTypeConfiguration binaryTypeConfigurationForStoreRef = new BinaryTypeConfiguration();
-        binaryTypeConfigurationForStoreRef.setTypeName(TransactionEntity.class.getName());
+        final BinaryTypeConfiguration binaryTypeConfigurationForTransactionEntity = new BinaryTypeConfiguration();
+        binaryTypeConfigurationForTransactionEntity.setTypeName(TransactionEntity.class.getName());
         final TransactionEntityBinarySerializer serializer = new TransactionEntityBinarySerializer();
         serializer.setUseRawSerialForm(serialForm);
         serializer.setUseVariableLengthIntegers(serialForm);
-        binaryTypeConfigurationForStoreRef.setSerializer(serializer);
+        binaryTypeConfigurationForTransactionEntity.setSerializer(serializer);
 
-        binaryConfiguration.setTypeConfigurations(Arrays.asList(binaryTypeConfigurationForStoreRef));
+        binaryConfiguration.setTypeConfigurations(Arrays.asList(binaryTypeConfigurationForTransactionEntity));
         conf.setBinaryConfiguration(binaryConfiguration);
 
         final DataStorageConfiguration dataConf = new DataStorageConfiguration();
@@ -105,8 +105,8 @@ public class TransactionEntityBinarySerializerTests extends GridTestsBase
             final IgniteCache<Long, TransactionEntity> referenceCache = referenceGrid.getOrCreateCache(cacheConfig);
             final IgniteCache<Long, TransactionEntity> cache = grid.getOrCreateCache(cacheConfig);
 
-            // no real advantage
-            this.efficiencyImpl(referenceGrid, grid, referenceCache, cache, "aldica optimised", "Ignite default", -0.01);
+            // no real advantage (minor disadvantage even due to additional flag)
+            this.efficiencyImpl(referenceGrid, grid, referenceCache, cache, "aldica optimised", "Ignite default", -0.02);
         }
         finally
         {
@@ -163,6 +163,7 @@ public class TransactionEntityBinarySerializerTests extends GridTestsBase
             TransactionEntity controlValue;
             TransactionEntity cacheValue;
 
+            // normal case
             controlValue = new TransactionEntity();
             controlValue.setId(1l);
             controlValue.setVersion(1l);
@@ -171,6 +172,22 @@ public class TransactionEntityBinarySerializerTests extends GridTestsBase
 
             cache.put(1l, controlValue);
             cacheValue = cache.get(1l);
+
+            // can't check for equals - value class does not support it
+            // check deep serialisation was actually involved (different value instances)
+            Assert.assertNotSame(controlValue, cacheValue);
+            Assert.assertEquals(controlValue.getId(), cacheValue.getId());
+            Assert.assertEquals(controlValue.getVersion(), cacheValue.getVersion());
+            Assert.assertEquals(controlValue.getChangeTxnId(), cacheValue.getChangeTxnId());
+            Assert.assertEquals(controlValue.getCommitTimeMs(), cacheValue.getCommitTimeMs());
+
+            // incomplete case (e.g. as constituent of NodeEntity)
+            controlValue = new TransactionEntity();
+            controlValue.setId(2l);
+            controlValue.setChangeTxnId(UUID.randomUUID().toString());
+
+            cache.put(2l, controlValue);
+            cacheValue = cache.get(2l);
 
             // can't check for equals - value class does not support it
             // check deep serialisation was actually involved (different value instances)

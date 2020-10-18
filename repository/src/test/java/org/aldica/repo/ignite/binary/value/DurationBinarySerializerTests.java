@@ -171,7 +171,7 @@ public class DurationBinarySerializerTests extends GridTestsBase
             cacheValue = cache.get(1l);
 
             Assert.assertEquals(controlValue, cacheValue);
-            Assert.assertFalse(controlValue == cacheValue);
+            Assert.assertNotSame(controlValue, cacheValue);
 
             controlValue = new Duration("-P1Y");
             cache.put(2l, controlValue);
@@ -179,7 +179,7 @@ public class DurationBinarySerializerTests extends GridTestsBase
             cacheValue = cache.get(2l);
 
             Assert.assertEquals(controlValue, cacheValue);
-            Assert.assertFalse(controlValue == cacheValue);
+            Assert.assertNotSame(controlValue, cacheValue);
 
             controlValue = new Duration("-P1Y11M30DT23H59M59.123456789S");
             cache.put(3l, controlValue);
@@ -187,7 +187,7 @@ public class DurationBinarySerializerTests extends GridTestsBase
             cacheValue = cache.get(3l);
 
             Assert.assertEquals(controlValue, cacheValue);
-            Assert.assertFalse(controlValue == cacheValue);
+            Assert.assertNotSame(controlValue, cacheValue);
         }
     }
 

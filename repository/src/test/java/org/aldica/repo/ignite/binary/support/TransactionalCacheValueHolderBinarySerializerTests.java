@@ -241,7 +241,7 @@ public class TransactionalCacheValueHolderBinarySerializerTests extends GridTest
             cacheValue = TransactionalCache.getSharedCacheValue(simpleCache, Long.valueOf(3L));
 
             Assert.assertEquals(controlValue, cacheValue);
-            Assert.assertFalse(controlValue == cacheValue);
+            Assert.assertNotSame(controlValue, cacheValue);
 
             controlValue = new Date(AbstractCustomBinarySerializer.LONG_AS_SHORT_SIGNED_POSITIVE_MAX - 100);
             TransactionalCache.putSharedCacheValue(simpleCache, Long.valueOf(4L), controlValue, null);
@@ -249,7 +249,7 @@ public class TransactionalCacheValueHolderBinarySerializerTests extends GridTest
             cacheValue = TransactionalCache.getSharedCacheValue(simpleCache, Long.valueOf(4L));
 
             Assert.assertEquals(controlValue, cacheValue);
-            Assert.assertFalse(controlValue == cacheValue);
+            Assert.assertNotSame(controlValue, cacheValue);
 
             controlValue = new ArrayList<>(Arrays.asList("Test1", "Test2", "Test3", "Test4"));
             TransactionalCache.putSharedCacheValue(simpleCache, Long.valueOf(5L), controlValue, null);
@@ -257,7 +257,7 @@ public class TransactionalCacheValueHolderBinarySerializerTests extends GridTest
             cacheValue = TransactionalCache.getSharedCacheValue(simpleCache, Long.valueOf(5L));
 
             Assert.assertEquals(controlValue, cacheValue);
-            Assert.assertFalse(controlValue == cacheValue);
+            Assert.assertNotSame(controlValue, cacheValue);
             Assert.assertEquals(controlValue.getClass(), cacheValue.getClass());
 
             controlValue = new LinkedList<>(Arrays.asList("Test1", "Test2", "Test3", "Test4"));
@@ -266,7 +266,7 @@ public class TransactionalCacheValueHolderBinarySerializerTests extends GridTest
             cacheValue = TransactionalCache.getSharedCacheValue(simpleCache, Long.valueOf(6L));
 
             Assert.assertEquals(controlValue, cacheValue);
-            Assert.assertFalse(controlValue == cacheValue);
+            Assert.assertNotSame(controlValue, cacheValue);
             Assert.assertNotEquals(controlValue.getClass(), cacheValue.getClass());
             Assert.assertEquals(ArrayList.class, cacheValue.getClass());
 
@@ -276,7 +276,7 @@ public class TransactionalCacheValueHolderBinarySerializerTests extends GridTest
             cacheValue = TransactionalCache.getSharedCacheValue(simpleCache, Long.valueOf(7L));
 
             Assert.assertEquals(controlValue, cacheValue);
-            Assert.assertFalse(controlValue == cacheValue);
+            Assert.assertNotSame(controlValue, cacheValue);
             Assert.assertEquals(controlValue.getClass(), cacheValue.getClass());
 
             controlValue = new LinkedList<>(Arrays.asList(Long.valueOf(1), new Date()));
@@ -285,7 +285,7 @@ public class TransactionalCacheValueHolderBinarySerializerTests extends GridTest
             cacheValue = TransactionalCache.getSharedCacheValue(simpleCache, Long.valueOf(8L));
 
             Assert.assertEquals(controlValue, cacheValue);
-            Assert.assertFalse(controlValue == cacheValue);
+            Assert.assertNotSame(controlValue, cacheValue);
             Assert.assertNotEquals(controlValue.getClass(), cacheValue.getClass());
             Assert.assertEquals(ArrayList.class, cacheValue.getClass());
 
@@ -295,7 +295,7 @@ public class TransactionalCacheValueHolderBinarySerializerTests extends GridTest
             cacheValue = TransactionalCache.getSharedCacheValue(simpleCache, Long.valueOf(9L));
 
             Assert.assertEquals(controlValue, cacheValue);
-            Assert.assertFalse(controlValue == cacheValue);
+            Assert.assertNotSame(controlValue, cacheValue);
             Assert.assertEquals(controlValue.getClass(), cacheValue.getClass());
 
             controlValue = new LinkedHashSet<>(Arrays.asList("Test1", "Test2", "Test3", "Test4"));
@@ -304,7 +304,7 @@ public class TransactionalCacheValueHolderBinarySerializerTests extends GridTest
             cacheValue = TransactionalCache.getSharedCacheValue(simpleCache, Long.valueOf(10L));
 
             Assert.assertEquals(controlValue, cacheValue);
-            Assert.assertFalse(controlValue == cacheValue);
+            Assert.assertNotSame(controlValue, cacheValue);
             Assert.assertNotEquals(controlValue.getClass(), cacheValue.getClass());
             Assert.assertEquals(HashSet.class, cacheValue.getClass());
 
@@ -314,7 +314,7 @@ public class TransactionalCacheValueHolderBinarySerializerTests extends GridTest
             cacheValue = TransactionalCache.getSharedCacheValue(simpleCache, Long.valueOf(11L));
 
             Assert.assertEquals(controlValue, cacheValue);
-            Assert.assertFalse(controlValue == cacheValue);
+            Assert.assertNotSame(controlValue, cacheValue);
             Assert.assertEquals(controlValue.getClass(), cacheValue.getClass());
 
             controlValue = new LinkedHashSet<>(Arrays.asList(Long.valueOf(1), new Date()));
@@ -323,7 +323,7 @@ public class TransactionalCacheValueHolderBinarySerializerTests extends GridTest
             cacheValue = TransactionalCache.getSharedCacheValue(simpleCache, Long.valueOf(12L));
 
             Assert.assertEquals(controlValue, cacheValue);
-            Assert.assertFalse(controlValue == cacheValue);
+            Assert.assertNotSame(controlValue, cacheValue);
             Assert.assertNotEquals(controlValue.getClass(), cacheValue.getClass());
             Assert.assertEquals(HashSet.class, cacheValue.getClass());
 
@@ -333,7 +333,7 @@ public class TransactionalCacheValueHolderBinarySerializerTests extends GridTest
             cacheValue = TransactionalCache.getSharedCacheValue(simpleCache, Long.valueOf(13L));
 
             Assert.assertEquals(controlValue, cacheValue);
-            Assert.assertFalse(controlValue == cacheValue);
+            Assert.assertNotSame(controlValue, cacheValue);
 
             controlValue = StoreRef.STORE_REF_WORKSPACE_SPACESSTORE;
             TransactionalCache.putSharedCacheValue(simpleCache, Long.valueOf(14L), controlValue, null);
@@ -341,7 +341,7 @@ public class TransactionalCacheValueHolderBinarySerializerTests extends GridTest
             cacheValue = TransactionalCache.getSharedCacheValue(simpleCache, Long.valueOf(14L));
 
             Assert.assertEquals(controlValue, cacheValue);
-            Assert.assertFalse(controlValue == cacheValue);
+            Assert.assertNotSame(controlValue, cacheValue);
         }
     }
 

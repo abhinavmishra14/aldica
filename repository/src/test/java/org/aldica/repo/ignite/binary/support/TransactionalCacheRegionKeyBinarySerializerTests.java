@@ -170,7 +170,7 @@ public class TransactionalCacheRegionKeyBinarySerializerTests extends GridTestsB
 
             Assert.assertEquals(controlValue, cacheValue);
             // check deep serialisation was actually involved
-            Assert.assertFalse(controlValue == cacheValue);
+            Assert.assertNotSame(controlValue, cacheValue);
 
             // random instead of well known region
             controlValue = new CacheRegionKey(UUID.randomUUID().toString(), "value2");
@@ -180,7 +180,7 @@ public class TransactionalCacheRegionKeyBinarySerializerTests extends GridTestsB
 
             Assert.assertEquals(controlValue, cacheValue);
             // check deep serialisation was actually involved
-            Assert.assertFalse(controlValue == cacheValue);
+            Assert.assertNotSame(controlValue, cacheValue);
         }
     }
 

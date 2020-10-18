@@ -315,10 +315,11 @@ public class TransactionalCacheValueHolderBinarySerializer extends AbstractCusto
     }
 
     /**
-     * Reads a value holder's state from raw serial form.
+     * Reads a value holder's contained value from raw serial form.
      *
      * @param rawReader
      *            the raw reader to use
+     * @return value of a value holder instance
      */
     protected Object readRawSerialForm(final BinaryRawReader rawReader)
     {
@@ -377,10 +378,11 @@ public class TransactionalCacheValueHolderBinarySerializer extends AbstractCusto
     }
 
     /**
-     * Reads a value holder's state from default serial form.
+     * Reads a value holder's contained value from default serial form.
      *
      * @param reader
      *            the reader to use
+     * @return value of a value holder instance
      */
     protected Object readDefaultSerialForm(final BinaryReader reader)
     {

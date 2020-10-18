@@ -11,7 +11,6 @@ import java.util.UUID;
 
 import org.aldica.common.ignite.GridTestsBase;
 import org.aldica.repo.ignite.ExpensiveTestCategory;
-import org.aldica.repo.ignite.binary.entity.ContentUrlEntityBinarySerializer;
 import org.alfresco.repo.content.filestore.FileContentStore;
 import org.alfresco.repo.content.filestore.FileContentUrlProvider;
 import org.alfresco.repo.domain.contentdata.ContentUrlEntity;
@@ -48,15 +47,15 @@ public class ContentUrlEntityBinarySerializerTests extends GridTestsBase
 
         final BinaryConfiguration binaryConfiguration = new BinaryConfiguration();
 
-        final BinaryTypeConfiguration binaryTypeConfigurationForStoreRef = new BinaryTypeConfiguration();
-        binaryTypeConfigurationForStoreRef.setTypeName(ContentUrlEntity.class.getName());
+        final BinaryTypeConfiguration binaryTypeConfigurationForContentUrlEntity = new BinaryTypeConfiguration();
+        binaryTypeConfigurationForContentUrlEntity.setTypeName(ContentUrlEntity.class.getName());
         final ContentUrlEntityBinarySerializer serializer = new ContentUrlEntityBinarySerializer();
         serializer.setUseRawSerialForm(serialForm);
         serializer.setUseVariableLengthIntegers(serialForm);
         serializer.setUseOptimisedContentURL(serialForm);
-        binaryTypeConfigurationForStoreRef.setSerializer(serializer);
+        binaryTypeConfigurationForContentUrlEntity.setSerializer(serializer);
 
-        binaryConfiguration.setTypeConfigurations(Arrays.asList(binaryTypeConfigurationForStoreRef));
+        binaryConfiguration.setTypeConfigurations(Arrays.asList(binaryTypeConfigurationForContentUrlEntity));
         conf.setBinaryConfiguration(binaryConfiguration);
 
         final DataStorageConfiguration dataConf = new DataStorageConfiguration();
@@ -202,7 +201,7 @@ public class ContentUrlEntityBinarySerializerTests extends GridTestsBase
 
             Assert.assertEquals(controlValue, cacheValue);
             // check deep serialisation was actually involved (different value instances)
-            Assert.assertFalse(controlValue == cacheValue);
+            Assert.assertNotSame(controlValue, cacheValue);
             Assert.assertEquals(controlValue.getId(), cacheValue.getId());
             Assert.assertEquals(controlValue.getContentUrlShort(), cacheValue.getContentUrlShort());
             Assert.assertEquals(controlValue.getContentUrlCrc(), cacheValue.getContentUrlCrc());
@@ -222,7 +221,7 @@ public class ContentUrlEntityBinarySerializerTests extends GridTestsBase
 
             Assert.assertEquals(controlValue, cacheValue);
             // check deep serialisation was actually involved (different value instances)
-            Assert.assertFalse(controlValue == cacheValue);
+            Assert.assertNotSame(controlValue, cacheValue);
             Assert.assertEquals(controlValue.getId(), cacheValue.getId());
             Assert.assertEquals(controlValue.getContentUrlShort(), cacheValue.getContentUrlShort());
             Assert.assertEquals(controlValue.getContentUrlCrc(), cacheValue.getContentUrlCrc());
@@ -242,7 +241,7 @@ public class ContentUrlEntityBinarySerializerTests extends GridTestsBase
 
             Assert.assertEquals(controlValue, cacheValue);
             // check deep serialisation was actually involved (different value instances)
-            Assert.assertFalse(controlValue == cacheValue);
+            Assert.assertNotSame(controlValue, cacheValue);
             Assert.assertEquals(controlValue.getId(), cacheValue.getId());
             Assert.assertNull(cacheValue.getContentUrlShort());
             Assert.assertEquals(controlValue.getContentUrlCrc(), cacheValue.getContentUrlCrc());
@@ -273,7 +272,7 @@ public class ContentUrlEntityBinarySerializerTests extends GridTestsBase
 
             Assert.assertEquals(controlValue, cacheValue);
             // check deep serialisation was actually involved (different value instances)
-            Assert.assertFalse(controlValue == cacheValue);
+            Assert.assertNotSame(controlValue, cacheValue);
             Assert.assertEquals(controlValue.getId(), cacheValue.getId());
             Assert.assertEquals(controlValue.getContentUrlShort(), cacheValue.getContentUrlShort());
             Assert.assertEquals(controlValue.getContentUrlCrc(), cacheValue.getContentUrlCrc());
@@ -281,32 +280,50 @@ public class ContentUrlEntityBinarySerializerTests extends GridTestsBase
             Assert.assertNull(cacheValue.getOrphanTime());
 
             Assert.assertEquals(keyControlValue, keyCacheValue);
-            Assert.assertFalse(keyControlValue == keyCacheValue);
+            Assert.assertNotSame(keyControlValue, keyCacheValue);
             // equals checks most, but not all
             Assert.assertEquals(keyControlValue.getContentUrlId(), keyCacheValue.getContentUrlId());
             Assert.assertTrue(Arrays.equals(keyControlValue.getEncryptedKeyAsBytes(), keyCacheValue.getEncryptedKeyAsBytes()));
             Assert.assertEquals(keyControlValue.getKeySize(), keyCacheValue.getKeySize());
             Assert.assertEquals(keyControlValue.getUnencryptedFileSize(), keyCacheValue.getUnencryptedFileSize());
 
-            // case with non-default content URL - unorphaned, unencrypted
+            // case with non-default content URL - unorphaned, encrypted
             controlValue = new ContentUrlEntity();
             controlValue.setId(5l);
             controlValue.setContentUrl("my-store://path/to/file/with/weird.name");
             controlValue.setSize(987654321l);
             controlValue.setOrphanTime(null);
+            keyControlValue = new ContentUrlKeyEntity();
+            keyControlValue.setId(2l);
+            keyControlValue.setContentUrlId(5l);
+            keyControlValue.setEncryptedKeyAsBytes(new byte[] { 22, -99, 127, -67, 111, -97, 0, 69, -96 });
+            keyControlValue.setKeySize(1024);
+            keyControlValue.setAlgorithm("MyTestAlgorithm");
+            keyControlValue.setMasterKeystoreId("masterKeystore");
+            keyControlValue.setMasterKeyAlias("masterAlias");
+            keyControlValue.setUnencryptedFileSize(null);
+            controlValue.setContentUrlKey(keyControlValue);
 
             cache.put(5l, controlValue);
             cacheValue = cache.get(5l);
+            keyCacheValue = cacheValue.getContentUrlKey();
 
             Assert.assertEquals(controlValue, cacheValue);
             // check deep serialisation was actually involved (different value instances)
-            Assert.assertFalse(controlValue == cacheValue);
+            Assert.assertNotSame(controlValue, cacheValue);
             Assert.assertEquals(controlValue.getId(), cacheValue.getId());
             Assert.assertEquals(controlValue.getContentUrlShort(), cacheValue.getContentUrlShort());
             Assert.assertEquals(controlValue.getContentUrlCrc(), cacheValue.getContentUrlCrc());
             Assert.assertEquals(controlValue.getSize(), cacheValue.getSize());
             Assert.assertNull(cacheValue.getOrphanTime());
-            Assert.assertNull(cacheValue.getContentUrlKey());
+
+            Assert.assertEquals(keyControlValue, keyCacheValue);
+            Assert.assertNotSame(keyControlValue, keyCacheValue);
+            // equals checks most, but not all
+            Assert.assertEquals(keyControlValue.getContentUrlId(), keyCacheValue.getContentUrlId());
+            Assert.assertTrue(Arrays.equals(keyControlValue.getEncryptedKeyAsBytes(), keyCacheValue.getEncryptedKeyAsBytes()));
+            Assert.assertEquals(keyControlValue.getKeySize(), keyCacheValue.getKeySize());
+            Assert.assertNull(keyCacheValue.getUnencryptedFileSize());
 
             // weird case in default Alfresco where ID is not set despite being persisted in the DB
             controlValue = new ContentUrlEntity();
@@ -320,7 +337,7 @@ public class ContentUrlEntityBinarySerializerTests extends GridTestsBase
 
             Assert.assertEquals(controlValue, cacheValue);
             // check deep serialisation was actually involved (different value instances)
-            Assert.assertFalse(controlValue == cacheValue);
+            Assert.assertNotSame(controlValue, cacheValue);
             Assert.assertEquals(controlValue.getId(), cacheValue.getId());
             Assert.assertNull(cacheValue.getContentUrlShort());
             Assert.assertEquals(controlValue.getContentUrlCrc(), cacheValue.getContentUrlCrc());

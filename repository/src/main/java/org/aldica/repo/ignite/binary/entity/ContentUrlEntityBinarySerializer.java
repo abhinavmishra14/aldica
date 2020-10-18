@@ -17,8 +17,8 @@ import org.apache.ignite.binary.BinaryWriter;
  * {@link ContentUrlKeyEntity the content encryption key} details in case a particular URL has been stored in encrypted format. This
  * implementation also exclusively uses the public getters and setters of the involved entity classes to only handle those fields in the
  * serial form which are part of the core identity - the {@link ContentUrlEntity#getContentUrlCrc() content URL CRC} and the
- * {@link ContentUrlEntity#getContentUrlCrc() content short URL} are excluded from this form for instances as their values are not essential
- * for the identity as defined by {@code equals}/{@code hashCode} and are automatically reconstructed in the
+ * {@link ContentUrlEntity#getContentUrlShort() content short URL} are excluded from this form for instances as their values are not
+ * essential for the identity as defined by {@code equals}/{@code hashCode} and are automatically reconstructed in the
  * {@link ContentUrlEntity#setContentUrl(String) content URL setter}.
  *
  *
@@ -54,11 +54,16 @@ public class ContentUrlEntityBinarySerializer extends AbstractCustomBinarySerial
     // apparently some use cases in Alfresco exist where ID is null despite being persisted in the DB
     private static final byte FLAG_ID_NULL = 1;
 
+    // content URL - like ID - should never be null, but since we can't trust ID, we handle its absence as well
     private static final byte FLAG_CONTENT_URL_NULL = 2;
+    // size cannot be null due to use of primitves in ContentUrlEntity
 
     private static final byte FLAG_ORPHAN_TIME_NULL = 4;
 
     private static final byte FLAG_KEY_NULL = 8;
+
+    // while all other fields are not null as per schema and code paths, the unencrypted file size can actually not be set
+    private static final byte FLAG_UNENCRYPTED_FILE_SIZE_NULL = 16;
 
     /**
      * {@inheritDoc}
@@ -80,6 +85,7 @@ public class ContentUrlEntityBinarySerializer extends AbstractCustomBinarySerial
         final Long orphanTime = contentUrlEntity.getOrphanTime();
 
         final ContentUrlKeyEntity contentUrlKeyEntity = contentUrlEntity.getContentUrlKey();
+        Long unencryptedFileSize = contentUrlKeyEntity != null ? contentUrlKeyEntity.getUnencryptedFileSize() : null;
 
         byte flags = 0;
         if (id == null)
@@ -97,6 +103,10 @@ public class ContentUrlEntityBinarySerializer extends AbstractCustomBinarySerial
         if (contentUrlKeyEntity == null)
         {
             flags |= FLAG_KEY_NULL;
+        }
+        if (unencryptedFileSize == null)
+        {
+            flags |= FLAG_UNENCRYPTED_FILE_SIZE_NULL;
         }
 
         if (this.useRawSerialForm)
@@ -127,7 +137,10 @@ public class ContentUrlEntityBinarySerializer extends AbstractCustomBinarySerial
                 this.write(contentUrlKeyEntity.getAlgorithm(), rawWriter);
                 this.write(contentUrlKeyEntity.getMasterKeystoreId(), rawWriter);
                 this.write(contentUrlKeyEntity.getMasterKeyAlias(), rawWriter);
-                this.writeFileSize(contentUrlKeyEntity.getUnencryptedFileSize(), rawWriter);
+                if (unencryptedFileSize != null)
+                {
+                    this.writeFileSize(unencryptedFileSize, rawWriter);
+                }
             }
         }
         else
@@ -155,7 +168,10 @@ public class ContentUrlEntityBinarySerializer extends AbstractCustomBinarySerial
                 writer.writeString(KEY_ALGORITHM, contentUrlKeyEntity.getAlgorithm());
                 writer.writeString(KEY_MASTER_KEYSTORE_ID, contentUrlKeyEntity.getMasterKeystoreId());
                 writer.writeString(KEY_MASTER_KEY_ALIAS, contentUrlKeyEntity.getMasterKeyAlias());
-                writer.writeLong(KEY_UNENCRYPTED_SIZE, contentUrlKeyEntity.getUnencryptedFileSize());
+                if (unencryptedFileSize != null)
+                {
+                    writer.writeLong(KEY_UNENCRYPTED_SIZE, unencryptedFileSize);
+                }
             }
         }
     }
@@ -210,7 +226,12 @@ public class ContentUrlEntityBinarySerializer extends AbstractCustomBinarySerial
                 final String keyAlgorithm = this.readString(rawReader);
                 final String masterKeystoreId = this.readString(rawReader);
                 final String masterKeyAlias = this.readString(rawReader);
-                final long unencryptedSize = this.readFileSize(rawReader);
+
+                Long unencryptedSize = null;
+                if ((flags & FLAG_UNENCRYPTED_FILE_SIZE_NULL) == 0)
+                {
+                    unencryptedSize = this.readFileSize(rawReader);
+                }
 
                 contentUrlKeyEntity.setId(keyId);
                 contentUrlKeyEntity.setContentUrlId(id);
@@ -249,7 +270,12 @@ public class ContentUrlEntityBinarySerializer extends AbstractCustomBinarySerial
                 final String keyAlgorithm = reader.readString(KEY_ALGORITHM);
                 final String masterKeystoreId = reader.readString(KEY_MASTER_KEYSTORE_ID);
                 final String masterKeyAlias = reader.readString(KEY_MASTER_KEY_ALIAS);
-                final long unencryptedSize = reader.readLong(KEY_UNENCRYPTED_SIZE);
+
+                Long unencryptedSize = null;
+                if ((flags & FLAG_UNENCRYPTED_FILE_SIZE_NULL) == 0)
+                {
+                    unencryptedSize = reader.readLong(KEY_UNENCRYPTED_SIZE);
+                }
 
                 contentUrlKeyEntity.setId(keyId);
                 contentUrlKeyEntity.setContentUrlId(id);
