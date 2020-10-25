@@ -12,8 +12,6 @@ import java.util.UUID;
 
 import org.aldica.common.ignite.GridTestsBase;
 import org.aldica.repo.ignite.ExpensiveTestCategory;
-import org.aldica.repo.ignite.binary.support.CacheRegion;
-import org.aldica.repo.ignite.binary.support.CacheRegionKeyBinarySerializer;
 import org.alfresco.repo.cache.lookup.CacheRegionKey;
 import org.apache.ignite.DataRegionMetrics;
 import org.apache.ignite.Ignite;
@@ -107,8 +105,8 @@ public class CacheRegionKeyBinarySerializerTests extends GridTestsBase
             final IgniteCache<Long, CacheRegionKey> cache = grid.getOrCreateCache(cacheConfig);
 
             // saving potential is substantial, but variable depending on region
-            // expect average of 15%
-            this.efficiencyImpl(referenceGrid, grid, referenceCache, cache, "aldica optimised", "Ignite default", 0.15);
+            // expect average of 18%
+            this.efficiencyImpl(referenceGrid, grid, referenceCache, cache, "aldica optimised", "Ignite default", 0.18);
         }
         finally
         {
@@ -144,8 +142,8 @@ public class CacheRegionKeyBinarySerializerTests extends GridTestsBase
             final IgniteCache<Long, CacheRegionKey> referenceCache1 = referenceGrid.getOrCreateCache(cacheConfig);
             final IgniteCache<Long, CacheRegionKey> cache1 = grid.getOrCreateCache(cacheConfig);
 
-            // saving potential is limited - 4%
-            this.efficiencyImpl(referenceGrid, grid, referenceCache1, cache1, "aldica raw serial", "aldica optimised", 0.04);
+            // saving potential is limited - 5%
+            this.efficiencyImpl(referenceGrid, grid, referenceCache1, cache1, "aldica raw serial", "aldica optimised", 0.05);
         }
         finally
         {
@@ -241,7 +239,8 @@ public class CacheRegionKeyBinarySerializerTests extends GridTestsBase
         for (int idx = 0; idx < 100000; idx++)
         {
             final String region = regions[rnJesus.nextInt(regions.length - 2)].getCacheRegionName();
-            final CacheRegionKey value = new CacheRegionKey(region, UUID.randomUUID().toString());
+            // 1 billion possible IDs is more than sufficient for testing - rarely seen in production, more in benchmarks
+            final CacheRegionKey value = new CacheRegionKey(region, Long.valueOf(rnJesus.nextInt(1000000000)));
 
             referenceCache.put(Long.valueOf(idx), value);
             cache.put(Long.valueOf(idx), value);

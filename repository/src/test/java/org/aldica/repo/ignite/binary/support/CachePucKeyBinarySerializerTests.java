@@ -3,6 +3,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package org.aldica.repo.ignite.binary.support;
 
+import java.lang.reflect.Constructor;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -10,8 +11,7 @@ import java.util.List;
 
 import org.aldica.common.ignite.GridTestsBase;
 import org.aldica.repo.ignite.ExpensiveTestCategory;
-import org.aldica.repo.ignite.binary.support.NodeVersionKeyBinarySerializer;
-import org.alfresco.repo.domain.node.NodeVersionKey;
+import org.alfresco.repo.domain.propval.AbstractPropertyValueDAOImpl.CachePucKey;
 import org.apache.ignite.DataRegionMetrics;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.IgniteCache;
@@ -33,10 +33,10 @@ import org.slf4j.LoggerFactory;
 /**
  * @author Axel Faust
  */
-public class NodeVersionKeyBinarySerializerTests extends GridTestsBase
+public class CachePucKeyBinarySerializerTests extends GridTestsBase
 {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(NodeVersionKeyBinarySerializerTests.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(CachePucKeyBinarySerializerTests.class);
 
     protected static IgniteConfiguration createConfiguration(final boolean serialForm, final String... regionNames)
     {
@@ -44,14 +44,14 @@ public class NodeVersionKeyBinarySerializerTests extends GridTestsBase
 
         final BinaryConfiguration binaryConfiguration = new BinaryConfiguration();
 
-        final BinaryTypeConfiguration binaryTypeConfigurationForNodeVersionKey = new BinaryTypeConfiguration();
-        binaryTypeConfigurationForNodeVersionKey.setTypeName(NodeVersionKey.class.getName());
-        final NodeVersionKeyBinarySerializer serializer = new NodeVersionKeyBinarySerializer();
+        final BinaryTypeConfiguration binaryTypeConfigurationForCachePucKey = new BinaryTypeConfiguration();
+        binaryTypeConfigurationForCachePucKey.setTypeName(CachePucKey.class.getName());
+        final CachePucKeyBinarySerializer serializer = new CachePucKeyBinarySerializer();
         serializer.setUseRawSerialForm(serialForm);
         serializer.setUseVariableLengthIntegers(serialForm);
-        binaryTypeConfigurationForNodeVersionKey.setSerializer(serializer);
+        binaryTypeConfigurationForCachePucKey.setSerializer(serializer);
 
-        binaryConfiguration.setTypeConfigurations(Arrays.asList(binaryTypeConfigurationForNodeVersionKey));
+        binaryConfiguration.setTypeConfigurations(Arrays.asList(binaryTypeConfigurationForCachePucKey));
         conf.setBinaryConfiguration(binaryConfiguration);
 
         final DataStorageConfiguration dataConf = new DataStorageConfiguration();
@@ -74,7 +74,7 @@ public class NodeVersionKeyBinarySerializerTests extends GridTestsBase
     }
 
     @Test
-    public void defaultFormCorrectness()
+    public void defaultFormCorrectness() throws Exception
     {
         final IgniteConfiguration conf = createConfiguration(false);
         this.correctnessImpl(conf);
@@ -82,7 +82,7 @@ public class NodeVersionKeyBinarySerializerTests extends GridTestsBase
 
     @Category(ExpensiveTestCategory.class)
     @Test
-    public void defaultFormEfficiency()
+    public void defaultFormEfficiency() throws Exception
     {
         final IgniteConfiguration referenceConf = createConfiguration(1, false, null);
         referenceConf.setIgniteInstanceName(referenceConf.getIgniteInstanceName() + "-reference");
@@ -95,16 +95,16 @@ public class NodeVersionKeyBinarySerializerTests extends GridTestsBase
             final Ignite referenceGrid = Ignition.start(referenceConf);
             final Ignite grid = Ignition.start(conf);
 
-            final CacheConfiguration<Long, NodeVersionKey> cacheConfig = new CacheConfiguration<>();
+            final CacheConfiguration<Long, CachePucKey> cacheConfig = new CacheConfiguration<>();
             cacheConfig.setCacheMode(CacheMode.LOCAL);
 
             cacheConfig.setName("values");
             cacheConfig.setDataRegionName("values");
-            final IgniteCache<Long, NodeVersionKey> referenceCache = referenceGrid.getOrCreateCache(cacheConfig);
-            final IgniteCache<Long, NodeVersionKey> cache = grid.getOrCreateCache(cacheConfig);
+            final IgniteCache<Long, CachePucKey> referenceCache = referenceGrid.getOrCreateCache(cacheConfig);
+            final IgniteCache<Long, CachePucKey> cache = grid.getOrCreateCache(cacheConfig);
 
-            // no difference as number / type of serialised fields does not differ
-            this.efficiencyImpl(referenceGrid, grid, referenceCache, cache, "aldica optimised", "Ignite default", 0);
+            // slightly better performance due to exclusion of hashCode (reduced partially by extra flag) - 2%
+            this.efficiencyImpl(referenceGrid, grid, referenceCache, cache, "aldica optimised", "Ignite default", 0.02);
         }
         finally
         {
@@ -113,7 +113,7 @@ public class NodeVersionKeyBinarySerializerTests extends GridTestsBase
     }
 
     @Test
-    public void rawSerialFormCorrectness()
+    public void rawSerialFormCorrectness() throws Exception
     {
         final IgniteConfiguration conf = createConfiguration(true);
         this.correctnessImpl(conf);
@@ -121,7 +121,7 @@ public class NodeVersionKeyBinarySerializerTests extends GridTestsBase
 
     @Category(ExpensiveTestCategory.class)
     @Test
-    public void rawSerialFormEfficiency()
+    public void rawSerialFormEfficiency() throws Exception
     {
         final IgniteConfiguration referenceConf = createConfiguration(false, "values");
         referenceConf.setIgniteInstanceName(referenceConf.getIgniteInstanceName() + "-reference");
@@ -132,17 +132,16 @@ public class NodeVersionKeyBinarySerializerTests extends GridTestsBase
             final Ignite referenceGrid = Ignition.start(referenceConf);
             final Ignite grid = Ignition.start(conf);
 
-            final CacheConfiguration<Long, NodeVersionKey> cacheConfig = new CacheConfiguration<>();
+            final CacheConfiguration<Long, CachePucKey> cacheConfig = new CacheConfiguration<>();
             cacheConfig.setCacheMode(CacheMode.LOCAL);
 
             cacheConfig.setName("values");
             cacheConfig.setDataRegionName("values");
-            final IgniteCache<Long, NodeVersionKey> referenceCache1 = referenceGrid.getOrCreateCache(cacheConfig);
-            final IgniteCache<Long, NodeVersionKey> cache1 = grid.getOrCreateCache(cacheConfig);
+            final IgniteCache<Long, CachePucKey> referenceCache1 = referenceGrid.getOrCreateCache(cacheConfig);
+            final IgniteCache<Long, CachePucKey> cache1 = grid.getOrCreateCache(cacheConfig);
 
-            // variable length integers provide advantage as value is entirely made up of integer components
-            // potential is limited as its only two longs and there's still the object overhead itself - 11%
-            this.efficiencyImpl(referenceGrid, grid, referenceCache1, cache1, "aldica raw serial", "aldica optimised", 0.11);
+            // variable length integers provide significant advantages for all but maximum key value range - 15%
+            this.efficiencyImpl(referenceGrid, grid, referenceCache1, cache1, "aldica raw serial", "aldica optimised", 0.15);
         }
         finally
         {
@@ -150,19 +149,23 @@ public class NodeVersionKeyBinarySerializerTests extends GridTestsBase
         }
     }
 
-    protected void correctnessImpl(final IgniteConfiguration conf)
+    protected void correctnessImpl(final IgniteConfiguration conf) throws Exception
     {
         try (Ignite grid = Ignition.start(conf))
         {
-            final CacheConfiguration<Long, NodeVersionKey> cacheConfig = new CacheConfiguration<>();
+            final CacheConfiguration<Long, CachePucKey> cacheConfig = new CacheConfiguration<>();
             cacheConfig.setName("nodeVersionKey");
             cacheConfig.setCacheMode(CacheMode.LOCAL);
-            final IgniteCache<Long, NodeVersionKey> cache = grid.getOrCreateCache(cacheConfig);
+            final IgniteCache<Long, CachePucKey> cache = grid.getOrCreateCache(cacheConfig);
 
-            NodeVersionKey controlValue;
-            NodeVersionKey cacheValue;
+            CachePucKey controlValue;
+            CachePucKey cacheValue;
 
-            controlValue = new NodeVersionKey(123456l, 789l);
+            // CachePucKey is public but does not have public constructor
+            final Constructor<CachePucKey> ctor = CachePucKey.class.getDeclaredConstructor(Long.class, Long.class, Long.class);
+            ctor.setAccessible(true);
+
+            controlValue = ctor.newInstance(Long.valueOf(1l), Long.valueOf(2l), Long.valueOf(3l));
             cache.put(1l, controlValue);
 
             cacheValue = cache.get(1l);
@@ -170,22 +173,55 @@ public class NodeVersionKeyBinarySerializerTests extends GridTestsBase
             Assert.assertEquals(controlValue, cacheValue);
             // check deep serialisation was actually involved
             Assert.assertNotSame(controlValue, cacheValue);
+
+            controlValue = ctor.newInstance(Long.valueOf(4l), Long.valueOf(5l), null);
+            cache.put(2l, controlValue);
+
+            cacheValue = cache.get(2l);
+
+            Assert.assertEquals(controlValue, cacheValue);
+            // check deep serialisation was actually involved
+            Assert.assertNotSame(controlValue, cacheValue);
+
+            controlValue = ctor.newInstance(Long.valueOf(6l), null, null);
+            cache.put(3l, controlValue);
+
+            cacheValue = cache.get(3l);
+
+            Assert.assertEquals(controlValue, cacheValue);
+            // check deep serialisation was actually involved
+            Assert.assertNotSame(controlValue, cacheValue);
+
+            controlValue = ctor.newInstance(null, null, null);
+            cache.put(4l, controlValue);
+
+            cacheValue = cache.get(4l);
+
+            Assert.assertEquals(controlValue, cacheValue);
+            // check deep serialisation was actually involved
+            Assert.assertNotSame(controlValue, cacheValue);
         }
     }
 
-    protected void efficiencyImpl(final Ignite referenceGrid, final Ignite grid, final IgniteCache<Long, NodeVersionKey> referenceCache,
-            final IgniteCache<Long, NodeVersionKey> cache, final String serialisationType, final String referenceSerialisationType,
-            final double marginFraction)
+    protected void efficiencyImpl(final Ignite referenceGrid, final Ignite grid, final IgniteCache<Long, CachePucKey> referenceCache,
+            final IgniteCache<Long, CachePucKey> cache, final String serialisationType, final String referenceSerialisationType,
+            final double marginFraction) throws Exception
     {
         LOGGER.info(
-                "Running NodeVersionKey serialisation benchmark of 100k instances, comparing {} vs. {} serialisation, expecting relative improvement margin / difference fraction of {}",
+                "Running CachePucKey serialisation benchmark of 100k instances, comparing {} vs. {} serialisation, expecting relative improvement margin / difference fraction of {}",
                 referenceSerialisationType, serialisationType, marginFraction);
+
+        // CachePucKey is public but does not have public constructor
+        final Constructor<CachePucKey> ctor = CachePucKey.class.getDeclaredConstructor(Long.class, Long.class, Long.class);
+        ctor.setAccessible(true);
 
         final SecureRandom rnJesus = new SecureRandom();
         for (int idx = 0; idx < 100000; idx++)
         {
             final long id = idx;
-            final NodeVersionKey value = new NodeVersionKey(id, 1l + rnJesus.nextInt(1000));
+            // due to deduplication, majority of (often used) values in alf_prop_unique_ctx would be quite low
+            final CachePucKey value = ctor.newInstance(Long.valueOf(rnJesus.nextInt(10000000)), Long.valueOf(rnJesus.nextInt(10000000)),
+                    Long.valueOf(rnJesus.nextInt(10000000)));
             referenceCache.put(id, value);
             cache.put(id, value);
         }

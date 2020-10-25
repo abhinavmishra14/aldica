@@ -21,6 +21,7 @@ The [cache factory](../blob/master/repository/src/main/java/org/aldica/repo/igni
     - *partitioned*: data is collectively held by all servers in a data grid, split into a defined number of partitions, with one server acting as the primary control server for a specific partition, and one or more other servers maintaining a backup of that partition; when a server needs to use a cache entry not stored in a primary partition managed by this server, it needs to perform a network call to another server to check for its existence / obtain the entry ([Ignite partitioned cache mode details](https://apacheignite.readme.io/docs/cache-modes#partitioned-mode)) 
     - *replicated*: similar to a *partitioned* cache, but all servers in a data grid have all data partitions in their local memory, and never need to perform network calls for read-only operations ([Ignite replicated cache mode details](https://apacheignite.readme.io/docs/cache-modes#replicated-mode))
 - Not Ignite-backed
+    - *nullCache*: Alfresco's no-op cache, allowing targeted disabling / read-through semantics for individual caches
     - *localDefaultSimple*: the default, non-distributed type of caches created by default Alfresco, relevant for use cases where cache keys/values or their pattern of use do not support a distributed type of use and storage in serialised form
 - Mixed Ignite / non-Ignite
     - *invalidatingDefaultSimple*: an enhanced variant of the default Alfresco cache type, where messages concerning update / removal operations on cache keys are distributed to other servers in a data grid for invalidation of locally held data in their corresponding caches
@@ -51,11 +52,11 @@ The following default Alfresco caches are incompatible with Ignite-backed caches
 - loadedResourceBundlessSharedCache
 - resourceBundleBaseNamesSharedCache
 - openCMISRegistrySharedCache
-- node.nodesSharedCache
+- imapMessageSharedCache
 
-Apart from the node.nodesSharedCache, cachingContentStoreCache and resourceBundleBaseNamesSharedCache, all unsupported caches only handle actual functional components instead of data entries, and distributing such components to other servers of the data grid would not make sense.
+Apart from the cachingContentStoreCache, resourceBundleBaseNamesSharedCache and imapMessageSharedCache, all unsupported caches only handle actual functional components instead of data entries, and distributing such components to other servers of the data grid would not make sense.
 The cachingContentStoreCache stores paths for local temporary files, which would typically not be valid on servers other than the one which created the temporary file. The resourceBundleBaseNamesSharedCache stores names of localisation bundles loaded from either the classpath of the server or the logical data repository, so contains a mixture of data that is either universal to all servers or specific only to the local server.
-The node.nodesSharedCache is a key cache for handling the identity and state of nodes in the Alfresco Repository, and is one of the most frequently used caches at all. Unfortunately, its value objects contain mutable state which is modified without proper cache update operations and which should not be transmitted to other servers as it has relevance only for the local server.
+The imapMessageSharedCache stores full instances of `javax.mail.internet.MimeMessage`, which may contain references to functional components or connection management elements (e.g. `javax.mail.Session`). Any kind of serialisation in Ignite-backed caches would break apart these references.
 
 ### Aldica Cache Optimisations
 The aldica module includes various optimisations to a sub-set of the default Alfresco caches to improve their performance and/or utility. Some of these optimisations may also be enabled on other caches by setting specific configuration properties.

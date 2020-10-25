@@ -37,6 +37,8 @@ public class CacheRegionKeyBinarySerializer extends AbstractCustomBinarySerializ
 
     private static final Field HASH_CODE_FIELD;
 
+    private static final byte FLAG_DB_ID_KEY = Byte.MIN_VALUE;
+
     static
     {
         try
@@ -80,16 +82,11 @@ public class CacheRegionKeyBinarySerializer extends AbstractCustomBinarySerializ
                 final BinaryRawWriter rawWriter = writer.rawWriter();
                 byte flag = (byte) literal.ordinal();
 
-                // in 16 out of 20 core uses of EntityLookupCache, the key is a long DB ID
-                // in one case (tenant admin DAO) the key is a String
-                // well-known cache regions are not numerous enough so can use top 2 bits to encode type
+                // in 16 out of 20 core uses of EntityLookupCache, the key is a DB ID
+                // we can use sign bit to encode type
                 if (cacheKey instanceof Long)
                 {
-                    flag = (byte) (flag | 0x80);
-                }
-                else if (cacheKey instanceof String)
-                {
-                    flag = (byte) (flag | 0x40);
+                    flag |= FLAG_DB_ID_KEY;
                 }
 
                 rawWriter.writeByte(flag);
@@ -101,10 +98,6 @@ public class CacheRegionKeyBinarySerializer extends AbstractCustomBinarySerializ
                 if (cacheKey instanceof Long)
                 {
                     this.writeDbId((Long) cacheKey, rawWriter);
-                }
-                else if (cacheKey instanceof String)
-                {
-                    this.write((String) cacheKey, rawWriter);
                 }
                 else
                 {
@@ -149,20 +142,16 @@ public class CacheRegionKeyBinarySerializer extends AbstractCustomBinarySerializ
             final BinaryRawReader rawReader = reader.rawReader();
 
             final byte flag = rawReader.readByte();
-            final int literalOrdinal = flag & 0x3f;
+            final int literalOrdinal = flag & 0x7f;
             literal = CacheRegion.values()[literalOrdinal];
             if (literal == CacheRegion.CUSTOM)
             {
                 cacheRegion = this.readString(rawReader);
             }
 
-            if ((flag & 0x80) != 0)
+            if ((flag & FLAG_DB_ID_KEY) != 0)
             {
                 cacheKey = this.readDbId(rawReader);
-            }
-            else if ((flag & 0x40) != 0)
-            {
-                cacheKey = this.readString(rawReader);
             }
             else
             {

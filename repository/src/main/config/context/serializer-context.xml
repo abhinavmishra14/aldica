@@ -52,6 +52,13 @@
             value="\${${moduleId}.core.binary.optimisation.nodeVersionKey.useVariableLengthIntegers}" />
     </bean>
 
+    <bean id="Configuration.${moduleId}.core.binary.serializer.alfresco.optimisedPucKey" abstract="true"
+        class="${project.basePackage}.binary.support.CachePucKeyBinarySerializer">
+        <property name="useRawSerialForm" value="\${${moduleId}.core.binary.optimisation.pucKey.useRawSerial}" />
+        <property name="useVariableLengthIntegers"
+            value="\${${moduleId}.core.binary.optimisation.pucKey.useVariableLengthIntegers}" />
+    </bean>
+
     <bean id="Configuration.${moduleId}.core.binary.serializer.alfresco.optimisedTransactionEntity" abstract="true"
         class="${project.basePackage}.binary.entity.TransactionEntityBinarySerializer">
         <property name="useRawSerialForm" value="\${${moduleId}.core.binary.optimisation.transactionEntity.useRawSerial}" />
@@ -93,6 +100,14 @@
         <property name="handle4EiBFileSizes" value="\${${moduleId}.core.binary.optimisation.contentUrlEntity.handle4EiBFileSizes}" />
         <property name="useOptimisedContentURL"
             value="\${${moduleId}.core.binary.optimisation.contentUrlEntity.useOptimisedContentURL}" />
+    </bean>
+
+    <bean id="Configuration.${moduleId}.core.binary.serializer.alfresco.optimisedPropertyUniqueContextEntity" abstract="true"
+        class="${project.basePackage}.binary.entity.PropertyUniqueContextEntityBinarySerializer">
+        <property name="useRawSerialForm" value="\${${moduleId}.core.binary.optimisation.propertyUniqueContextEntity.useRawSerial}" />
+        <property name="useVariableLengthIntegers"
+            value="\${${moduleId}.core.binary.optimisation.propertyUniqueContextEntity.useVariableLengthIntegers}" />
+        <property name="handleNegativeIds" value="\${${moduleId}.core.binary.optimisation.propertyUniqueContextEntity.handleNegativeIds}" />
     </bean>
 
     <bean id="Configuration.${moduleId}.core.binary.serializer.alfresco.optimisedStoreRef" abstract="true"
