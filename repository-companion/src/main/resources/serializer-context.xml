@@ -32,6 +32,9 @@
     <bean id="Configuration.${moduleId}.core.binary.serializer.alfresco.optimisedNodeVersionKey"
         class="org.aldica.repo.ignite.binary.support.NodeVersionKeyBinarySerializer" />
 
+    <bean id="Configuration.${moduleId}.core.binary.serializer.alfresco.optimisedChildByNameKey"
+        class="org.aldica.repo.ignite.binary.support.ChildByNameKeyBinarySerializer" />
+
     <bean id="Configuration.${moduleId}.core.binary.serializer.alfresco.optimisedPucKey"
         class="org.aldica.repo.ignite.binary.support.CachePucKeyBinarySerializer" />
 
@@ -43,6 +46,9 @@
 
     <bean id="Configuration.${moduleId}.core.binary.serializer.alfresco.optimisedNodeEntity"
         class="org.aldica.repo.ignite.binary.entity.NodeEntityBinarySerializer" />
+
+    <bean id="Configuration.${moduleId}.core.binary.serializer.alfresco.optimisedChildAssocEntity"
+        class="org.aldica.repo.ignite.binary.entity.ChildAssocEntityBinarySerializer" />
 
     <bean id="Configuration.${moduleId}.core.binary.serializer.alfresco.optimisedAclEntity"
         class="org.aldica.repo.ignite.binary.entity.AclEntityBinarySerializer" />
@@ -82,5 +88,8 @@
 
     <bean id="Configuration.${moduleId}.core.binary.serializer.alfresco.optimisedDuration"
         class="org.aldica.repo.ignite.binary.value.DurationBinarySerializer" />
+
+    <bean id="Configuration.${moduleId}.core.binary.serializer.alfresco.optimisedAuthenticationCacheEntry"
+        class="org.aldica.repo.ignite.binary.misc.AuthenticationCacheEntryBinarySerializer" />
 
 </beans>

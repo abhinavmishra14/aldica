@@ -3,11 +3,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 package org.aldica.repo.ignite.binary.value;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.aldica.repo.ignite.binary.base.AbstractCustomBinarySerializer;
 import org.aldica.repo.ignite.cache.NodeAspectsCacheSet;
@@ -34,6 +31,8 @@ import org.springframework.context.ApplicationContextAware;
  */
 public class NodeAspectsBinarySerializer extends AbstractCustomBinarySerializer implements ApplicationContextAware
 {
+
+    private static final String QNAME_ID_FLAG = "qNameIdFlag";
 
     private static final String VALUES = "values";
 
@@ -173,52 +172,57 @@ public class NodeAspectsBinarySerializer extends AbstractCustomBinarySerializer 
 
     protected void writeAspectsRegularSerialForm(final NodeAspectsCacheSet aspects, final BinaryWriter writer)
     {
+        writer.writeBoolean(QNAME_ID_FLAG, this.useIdsWhenReasonable);
         if (this.useIdsWhenReasonable)
         {
-            final Set<Long> ids = aspects.stream().map(aspectQName -> {
+            final long[] ids = new long[aspects.size()];
+            int idx = 0;
+            for (final QName aspectQName : aspects)
+            {
                 final Pair<Long, QName> qnamePair = this.qnameDAO.getQName(aspectQName);
                 if (qnamePair == null)
                 {
                     throw new AlfrescoRuntimeException("Cannot resolve " + aspectQName + " to DB ID");
                 }
 
-                return qnamePair.getFirst();
-            }).collect(Collectors.toSet());
+                ids[idx++] = qnamePair.getFirst().longValue();
+            }
 
-            writer.writeCollection(VALUES, ids);
+            writer.writeLongArray(VALUES, ids);
         }
         else
         {
-            // must be wrapped otherwise it would be written as self-referential handle
-            // effectively preventing ANY values from being written
-            writer.writeCollection(VALUES, Collections.unmodifiableSet(aspects));
+            writer.writeObjectArray(VALUES, aspects.toArray(new QName[0]));
         }
     }
 
     protected void readAspectsRegularSerialForm(final NodeAspectsCacheSet aspects, final BinaryReader reader)
     {
-        final Collection<?> values = reader.readCollection(VALUES);
-        values.forEach(value -> {
-            QName aspectQName;
-            if (value instanceof Long)
+        final boolean usesIds = reader.readBoolean(QNAME_ID_FLAG);
+
+        if (usesIds && !this.useIdsWhenReasonable)
+        {
+            throw new BinaryObjectException("Serializer is not configured to use IDs in place of QName");
+        }
+
+        if (usesIds)
+        {
+            final long[] ids = reader.readLongArray(VALUES);
+            for (final long id : ids)
             {
-                if (!this.useIdsWhenReasonable)
-                {
-                    throw new BinaryObjectException("Serializer is not configured to use IDs in place of QName");
-                }
-                final Pair<Long, QName> qnamePair = this.qnameDAO.getQName((Long) value);
+                final Pair<Long, QName> qnamePair = this.qnameDAO.getQName(id);
                 if (qnamePair == null)
                 {
-                    throw new BinaryObjectException("Cannot resolve QName for ID " + value);
+                    throw new BinaryObjectException("Cannot resolve QName for ID " + id);
                 }
-                aspectQName = qnamePair.getSecond();
+                aspects.add(qnamePair.getSecond());
             }
-            else
-            {
-                aspectQName = (QName) value;
-            }
-            aspects.add(aspectQName);
-        });
+        }
+        else
+        {
+            final QName[] values = (QName[]) reader.readObjectArray(VALUES);
+            Collections.addAll(aspects, values);
+        }
     }
 
     protected void ensureDAOsAvailable() throws BinaryObjectException

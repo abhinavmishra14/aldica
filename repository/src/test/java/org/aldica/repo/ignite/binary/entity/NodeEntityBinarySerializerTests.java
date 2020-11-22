@@ -160,7 +160,7 @@ public class NodeEntityBinarySerializerTests extends GridTestsBase
             final IgniteCache<Long, NodeEntity> referenceCache = referenceGrid.getOrCreateCache(cacheConfig);
             final IgniteCache<Long, NodeEntity> cache = grid.getOrCreateCache(cacheConfig);
 
-            // variabel length integers and lack of field metadata in complex object - further 16 %
+            // variable length integers and lack of field metadata in complex object - further 16 %
             this.efficiencyImpl(referenceGrid, grid, referenceCache, cache, "aldica raw serial", "aldica optimised", 0.16);
         }
         finally

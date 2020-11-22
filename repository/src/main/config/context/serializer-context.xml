@@ -50,6 +50,16 @@
         <property name="useRawSerialForm" value="\${${moduleId}.core.binary.optimisation.nodeVersionKey.useRawSerial}" />
         <property name="useVariableLengthIntegers"
             value="\${${moduleId}.core.binary.optimisation.nodeVersionKey.useVariableLengthIntegers}" />
+        <property name="handleNegativeIds" value="\${${moduleId}.core.binary.optimisation.nodeVersionKey.handleNegativeIds}" />
+    </bean>
+
+    <bean id="Configuration.${moduleId}.core.binary.serializer.alfresco.optimisedChildByNameKey" abstract="true"
+        class="${project.basePackage}.binary.support.ChildByNameKeyBinarySerializer">
+        <property name="useRawSerialForm" value="\${${moduleId}.core.binary.optimisation.childByNameKey.useRawSerial}" />
+        <property name="useVariableLengthIntegers"
+            value="\${${moduleId}.core.binary.optimisation.childByNameKey.useVariableLengthIntegers}" />
+        <property name="handleNegativeIds" value="\${${moduleId}.core.binary.optimisation.childByNameKey.handleNegativeIds}" />
+        <property name="useIdsWhenReasonable" value="\${${moduleId}.core.binary.optimisation.childByNameKey.useIdsWhenReasonable}" />
     </bean>
 
     <bean id="Configuration.${moduleId}.core.binary.serializer.alfresco.optimisedPucKey" abstract="true"
@@ -57,6 +67,7 @@
         <property name="useRawSerialForm" value="\${${moduleId}.core.binary.optimisation.pucKey.useRawSerial}" />
         <property name="useVariableLengthIntegers"
             value="\${${moduleId}.core.binary.optimisation.pucKey.useVariableLengthIntegers}" />
+        <property name="handleNegativeIds" value="\${${moduleId}.core.binary.optimisation.pucKey.handleNegativeIds}" />
     </bean>
 
     <bean id="Configuration.${moduleId}.core.binary.serializer.alfresco.optimisedTransactionEntity" abstract="true"
@@ -81,6 +92,14 @@
         <property name="useVariableLengthIntegers"
             value="\${${moduleId}.core.binary.optimisation.nodeEntity.useVariableLengthIntegers}" />
         <property name="handleNegativeIds" value="\${${moduleId}.core.binary.optimisation.nodeEntity.handleNegativeIds}" />
+    </bean>
+
+    <bean id="Configuration.${moduleId}.core.binary.serializer.alfresco.optimisedChildAssocEntity" abstract="true"
+        class="${project.basePackage}.binary.entity.ChildAssocEntityBinarySerializer">
+        <property name="useRawSerialForm" value="\${${moduleId}.core.binary.optimisation.childAssocEntity.useRawSerial}" />
+        <property name="useVariableLengthIntegers"
+            value="\${${moduleId}.core.binary.optimisation.childAssocEntity.useVariableLengthIntegers}" />
+        <property name="handleNegativeIds" value="\${${moduleId}.core.binary.optimisation.childAssocEntity.handleNegativeIds}" />
     </bean>
 
     <bean id="Configuration.${moduleId}.core.binary.serializer.alfresco.optimisedAclEntity" abstract="true"
@@ -188,6 +207,13 @@
         <property name="useRawSerialForm" value="\${${moduleId}.core.binary.optimisation.duration.useRawSerial}" />
         <property name="useVariableLengthIntegers"
             value="\${${moduleId}.core.binary.optimisation.duration.useVariableLengthIntegers}" />
+    </bean>
+
+    <bean id="Configuration.${moduleId}.core.binary.serializer.alfresco.optimisedAuthenticationCacheEntry" abstract="true"
+        class="${project.basePackage}.binary.misc.AuthenticationCacheEntryBinarySerializer">
+        <property name="useRawSerialForm" value="\${${moduleId}.core.binary.optimisation.authenticationCacheEntry.useRawSerial}" />
+        <property name="useVariableLengthIntegers"
+            value="\${${moduleId}.core.binary.optimisation.authenticationCacheEntry.useVariableLengthIntegers}" />
     </bean>
 
 </beans>

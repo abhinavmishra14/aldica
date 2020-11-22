@@ -10,7 +10,6 @@ import java.time.Month;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -18,7 +17,6 @@ import java.util.UUID;
 
 import org.aldica.common.ignite.GridTestsBase;
 import org.aldica.repo.ignite.ExpensiveTestCategory;
-import org.aldica.repo.ignite.binary.value.NodePropertiesBinarySerializer;
 import org.aldica.repo.ignite.cache.NodePropertiesCacheMap;
 import org.alfresco.model.ContentModel;
 import org.alfresco.repo.content.MimetypeMap;
@@ -102,8 +100,7 @@ public class NodePropertiesBinarySerializerTests extends GridTestsBase
         final SecureRandom rnJesus = new SecureRandom();
         for (int idx = 0; idx < UNIQUE_CONTENT_DATA_COUNT; idx++)
         {
-            final ContentDataWithId value = new ContentDataWithId(new ContentData(urlProvider
-                    .createNewFileStoreUrl(),
+            final ContentDataWithId value = new ContentDataWithId(new ContentData(urlProvider.createNewFileStoreUrl(),
                     MIMETYPES[rnJesus.nextInt(MIMETYPES.length)], rnJesus.nextInt(Integer.MAX_VALUE),
                     ENCODINGS[rnJesus.nextInt(ENCODINGS.length)], LOCALES[rnJesus.nextInt(LOCALES.length)]), Long.valueOf(idx));
 
@@ -228,7 +225,8 @@ public class NodePropertiesBinarySerializerTests extends GridTestsBase
                 final IgniteCache<Long, NodePropertiesCacheMap> cache1 = defaultGrid.getOrCreateCache(cacheConfig);
 
                 // default uses HashMap.writeObject and Serializable all the way through, which is already very efficient
-                // without ID substitution, our serialisation cannot come close - -73%
+                // this actually intrinsically deduplicates common objects / values (e.g. namespace URIs)
+                // without ID substitution (or our custom QNameBinarySerializer), our serialisation cannot come close - -73%
                 this.efficiencyImpl(referenceGrid, defaultGrid, referenceCache1, cache1, contentDataDAO, "aldica optimised",
                         "Ignite default", -0.73);
 
@@ -259,8 +257,7 @@ public class NodePropertiesBinarySerializerTests extends GridTestsBase
 
                 // savings should be more pronounced with both QName and ContentDataWithId replaced
                 // 54%
-                this.efficiencyImpl(referenceGrid, useAllIdGrid, referenceCache4, cache4,
-                        contentDataDAO,
+                this.efficiencyImpl(referenceGrid, useAllIdGrid, referenceCache4, cache4, contentDataDAO,
                         "aldica optimised (QName + ContentData ID substitution)", "Ignite default", 0.54);
 
                 cacheConfig.setName("comparison5");
@@ -432,7 +429,7 @@ public class NodePropertiesBinarySerializerTests extends GridTestsBase
             NodePropertiesCacheMap cacheValue;
             ArrayList<NodeRef> categories;
 
-            controlValue = new NodePropertiesCacheMap(Collections.emptyMap());
+            controlValue = new NodePropertiesCacheMap();
             controlValue.put(ContentModel.PROP_CREATOR, "admin");
             controlValue.put(ContentModel.PROP_CREATED,
                     Date.from(LocalDateTime.of(2020, Month.JANUARY, 1, 6, 0, 0).toInstant(ZoneOffset.UTC)));
@@ -459,8 +456,7 @@ public class NodePropertiesBinarySerializerTests extends GridTestsBase
 
     protected void efficiencyImpl(final Ignite referenceGrid, final Ignite defaultGrid,
             final IgniteCache<Long, NodePropertiesCacheMap> referenceCache, final IgniteCache<Long, NodePropertiesCacheMap> cache,
-            final ContentDataDAO contentDataDAO, final String serialisationType,
-            final String referenceSerialisationType,
+            final ContentDataDAO contentDataDAO, final String serialisationType, final String referenceSerialisationType,
             final double marginFraction)
     {
         LOGGER.info(

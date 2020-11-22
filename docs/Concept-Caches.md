@@ -78,6 +78,19 @@ A small set of default Alfresco caches serves in specific use cases that warrant
 - propertyClassCache
 
 Furthermore, the default cache *ticketsCache* is used in such a way that its default type as a *partitioned* (Alfresco term: *fully-distributed*) cache can cause significant overhead on user login or use of operations that list the currently authenticated users based on their cached tickets. Since at least the user login case occurs regularly, the cache type is overwritten by the aldica module to that of a *replicated* cache.
+Overall, the following caches have been overwritten to use a *replicated* cache type for reasons of performance due for frequency of use, considering a generally limited number of small-ish entries:
+
+- ticketsCache
+- authenticationSharedCache
+- immutableEntitySharedCache
+
+The following caches have been overwritten to use a *partitioned* cache type instead of the Alfresco default (either *invalidating* or *local*) in order to reduce redundant data and increase the overall effective amount of data cached among all nodes in a grid, and avoid wasteful invalidations between nodes when non-sticky access patterns are used and same data is accessed successively on different nodes:
+
+- node.nodesSharedCache
+- node.aspectsSharedCache
+- node.propertiesSharedCache
+- propertyValueCache
+- propertyUniqueContextSharedCache
 
 ## Asynchronously Refreshed Caches
 In addition to the vast amount of standard caches in the Alfresco Repository (about 52 in Alfresco 6.1) there are a handful of caches using a distinct technical concept and interface. A [AsynchronouslyRefreshedCache](https://github.com/Alfresco/alfresco-core/blob/master/src/main/java/org/alfresco/util/cache/AsynchronouslyRefreshedCache.java) is a special type of cache that can have its values regenerated / recalculated asynchronously. It is used to manage rather complex data structures where a simple change can require extensive, cascading updates and/or recalculation of data, which would be too costly to handle as part of the original user action. It is used in the default Alfresco Repository for the following use cases:
